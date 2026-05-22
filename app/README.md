@@ -1,6 +1,9 @@
-# Daily Tasks — Flutter App
+![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
+![Built with Claude](https://img.shields.io/badge/Built%20with-Claude-orange?logo=anthropic)
 
-A clean, minimal daily task scheduler for Android built with Flutter.
+# Slate — Flutter App
+
+A clean, minimal daily task scheduler I built for my own use.
 
 ## Features
 
@@ -16,32 +19,10 @@ A clean, minimal daily task scheduler for Android built with Flutter.
 
 ---
 
-## Project Structure
-
-```
-lib/
-├── main.dart               # Entry point
-├── app.dart                # MaterialApp + AppTheme
-├── models/
-│   └── task.dart           # Task data model
-├── services/
-│   └── task_storage.dart   # SharedPreferences persistence
-├── screens/
-│   ├── home_screen.dart    # PageView-based day navigator
-│   ├── day_screen.dart     # Task list for a single day
-│   └── calendar_screen.dart # TableCalendar day picker
-└── widgets/
-    ├── task_tile.dart      # Swipeable, editable task row
-    └── add_task_sheet.dart # Bottom sheet for adding tasks
-```
-
----
-
 ## Setup & Run
 
 ### Prerequisites
 - Flutter SDK ≥ 3.0.0 ([install guide](https://docs.flutter.dev/get-started/install))
-- Android Studio or VS Code with Flutter plugin
 - An Android device or emulator (API 21+)
 
 ### Steps
@@ -60,17 +41,6 @@ flutter run
 flutter build apk --release
 # Output: build/app/outputs/flutter-apk/app-release.apk
 ```
-
----
-
-## Dependencies
-
-| Package | Version | Purpose |
-|---|---|---|
-| `shared_preferences` | ^2.2.2 | Local task persistence |
-| `table_calendar` | ^3.1.0 | Calendar view |
-| `intl` | ^0.19.0 | Date formatting |
-| `uuid` | ^4.3.3 | Unique task IDs |
 
 ---
 
