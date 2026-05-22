@@ -124,7 +124,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           fontFamily: 'sans-serif',
         ),
         todayDecoration: BoxDecoration(
-          color: AppTheme.ink.withOpacity(0.15),
+          color: AppTheme.ink.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         todayTextStyle: const TextStyle(
@@ -177,7 +177,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 decoration: BoxDecoration(
                   color: isSameDay(day, DateTime.now())
                       ? AppTheme.ink
-                      : AppTheme.accent.withOpacity(0.7),
+                      : AppTheme.accent.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -200,9 +200,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'SELECTED',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppTheme.muted,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -268,7 +268,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
         width: double.infinity,
         height: 52,
         child: ElevatedButton(
-          onPressed: () => Navigator.pop(context, _selectedDay),
+          onPressed: () {
+            final normalized = DateTime(
+              _selectedDay.year,
+              _selectedDay.month,
+              _selectedDay.day,
+            );
+            Navigator.pop(context, normalized);
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.ink,
             foregroundColor: Colors.white,
