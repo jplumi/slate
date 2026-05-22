@@ -114,7 +114,8 @@ class _DayScreenState extends State<DayScreen> {
       child: Scaffold(
         backgroundColor: AppTheme.cream,
         body: _loading
-            ? const Center(child: CircularProgressIndicator(color: AppTheme.ink))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.ink))
             : Stack(
                 children: [
                   _buildBody(),
@@ -208,7 +209,7 @@ class _DayScreenState extends State<DayScreen> {
             child: Container(
               height: 1,
               color: completed
-                  ? AppTheme.checkGreen.withOpacity(0.3)
+                  ? AppTheme.checkGreen.withValues(alpha: 0.3)
                   : AppTheme.divider,
             ),
           ),
@@ -229,7 +230,7 @@ class _DayScreenState extends State<DayScreen> {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppTheme.ink.withOpacity(0.06),
+                color: AppTheme.ink.withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -264,8 +265,9 @@ class _DayScreenState extends State<DayScreen> {
   }
 
   Widget _buildFAB() {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Positioned(
-      bottom: 28,
+      bottom: 28 + bottomInset,
       right: 24,
       child: GestureDetector(
         onTap: _showAddSheet,
@@ -277,7 +279,7 @@ class _DayScreenState extends State<DayScreen> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppTheme.ink.withOpacity(0.3),
+                color: AppTheme.ink.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),

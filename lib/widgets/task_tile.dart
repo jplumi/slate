@@ -21,7 +21,8 @@ class TaskTile extends StatefulWidget {
   State<TaskTile> createState() => _TaskTileState();
 }
 
-class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin {
+class _TaskTileState extends State<TaskTile>
+    with SingleTickerProviderStateMixin {
   late AnimationController _checkController;
   late Animation<double> _checkScale;
   bool _isEditing = false;
@@ -49,9 +50,8 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
 
   void _onToggle() async {
     HapticFeedback.lightImpact();
-    await _checkController.forward();
-    await _checkController.reverse();
     widget.onToggle();
+    _checkController.forward().then((_) => _checkController.reverse());
   }
 
   void _startEditing() {
@@ -89,14 +89,14 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           decoration: BoxDecoration(
             color: widget.task.isCompleted
-                ? Colors.white.withOpacity(0.5)
+                ? Colors.white.withValues(alpha: 0.5)
                 : Colors.white,
             borderRadius: BorderRadius.circular(14),
             boxShadow: widget.task.isCompleted
                 ? []
                 : [
                     BoxShadow(
-                      color: AppTheme.ink.withOpacity(0.06),
+                      color: AppTheme.ink.withValues(alpha: 0.06),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -108,7 +108,8 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
               borderRadius: BorderRadius.circular(14),
               onTap: _isEditing ? null : () {},
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
                     ScaleTransition(
@@ -116,7 +117,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                       child: GestureDetector(
                         onTap: _onToggle,
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
+                          duration: const Duration(milliseconds: 80),
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
@@ -132,7 +133,8 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                             borderRadius: BorderRadius.circular(7),
                           ),
                           child: widget.task.isCompleted
-                              ? const Icon(Icons.check, size: 14, color: Colors.white)
+                              ? const Icon(Icons.check,
+                                  size: 14, color: Colors.white)
                               : null,
                         ),
                       ),
@@ -157,7 +159,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                               onTapOutside: (_) => _submitEdit(),
                             )
                           : AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 200),
+                              duration: const Duration(milliseconds: 80),
                               style: TextStyle(
                                 color: widget.task.isCompleted
                                     ? AppTheme.muted
