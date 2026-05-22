@@ -21,8 +21,12 @@ class TaskStorage {
   static Future<void> saveTasks(DateTime date, List<Task> tasks) async {
     final prefs = await SharedPreferences.getInstance();
     final key = _keyForDate(date);
-    final encoded = jsonEncode(tasks.map((t) => t.toJson()).toList());
-    await prefs.setString(key, encoded);
+    if (tasks.isEmpty) {
+      await prefs.remove(key);
+    } else {
+      final encoded = jsonEncode(tasks.map((t) => t.toJson()).toList());
+      await prefs.setString(key, encoded);
+    }
   }
 
   /// Returns a set of date strings (yyyy-MM-dd) that have at least one task

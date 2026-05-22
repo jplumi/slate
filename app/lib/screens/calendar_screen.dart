@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
 import '../app.dart';
 import '../services/task_storage.dart';
 
@@ -40,53 +39,39 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.cream,
-      appBar: AppBar(
-        backgroundColor: AppTheme.ink,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Calendar',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'sans-serif',
+        backgroundColor: AppTheme.cream,
+        appBar: AppBar(
+          backgroundColor: AppTheme.ink,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, DateTime.now());
-            },
-            child: const Text(
-              'Today',
-              style: TextStyle(
-                color: AppTheme.accent,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'sans-serif',
-              ),
+          title: const Text(
+            'Calendar',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'sans-serif',
             ),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildCalendar(),
-          const Divider(height: 1, color: AppTheme.divider),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: _buildSelectedDayInfo(),
-          ),
-          const Spacer(),
-          _buildConfirmButton(),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, DateTime.now());
+              },
+              child: const Text(
+                'Today',
+                style: TextStyle(
+                  color: AppTheme.accent,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'sans-serif',
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: _buildCalendar());
   }
 
   Widget _buildCalendar() {
@@ -96,10 +81,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
       focusedDay: _focusedDay,
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
       onDaySelected: (selectedDay, focusedDay) {
-        setState(() {
-          _selectedDay = selectedDay;
-          _focusedDay = focusedDay;
-        });
+        final normalized = DateTime(
+          selectedDay.year,
+          selectedDay.month,
+          selectedDay.day,
+        );
+        Navigator.pop(context, normalized);
       },
       onPageChanged: (focusedDay) {
         _focusedDay = focusedDay;
@@ -185,114 +172,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
           }
           return null;
         },
-      ),
-    );
-  }
-
-  Widget _buildSelectedDayInfo() {
-    final isToday = isSameDay(_selectedDay, DateTime.now());
-    final formatted = DateFormat('EEEE, MMMM d, yyyy').format(_selectedDay);
-    final hasTasks = _hasTasksOnDay(_selectedDay);
-
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'SELECTED',
-                style: TextStyle(
-                  color: AppTheme.muted,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.8,
-                  fontFamily: 'sans-serif',
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                formatted,
-                style: const TextStyle(
-                  color: AppTheme.ink,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'sans-serif',
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (isToday)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.ink,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'Today',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'sans-serif',
-              ),
-            ),
-          )
-        else if (hasTasks)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.accentSoft,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'Has tasks',
-              style: TextStyle(
-                color: AppTheme.accent,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'sans-serif',
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildConfirmButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          onPressed: () {
-            final normalized = DateTime(
-              _selectedDay.year,
-              _selectedDay.month,
-              _selectedDay.day,
-            );
-            Navigator.pop(context, normalized);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.ink,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Go to this day',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'sans-serif',
-            ),
-          ),
-        ),
       ),
     );
   }
