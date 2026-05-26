@@ -77,6 +77,27 @@ class _DayScreenState extends State<DayScreen> {
     _saveTasks();
   }
 
+  void _showAddSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddTaskSheet(onAdd: _addTask),
+    );
+  }
+
+  void _showEditSheet(String id, String currentTitle) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddTaskSheet(
+        initialValue: currentTitle,
+        onAdd: (newTitle) => _editTask(id, newTitle),
+      ),
+    );
+  }
+
   void _editTask(String id, String newTitle) {
     if (newTitle.trim().isEmpty) {
       _deleteTask(id);
@@ -89,15 +110,6 @@ class _DayScreenState extends State<DayScreen> {
       }
     });
     _saveTasks();
-  }
-
-  void _showAddSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddTaskSheet(onAdd: _addTask),
-    );
   }
 
   int get _completedCount => _tasks.where((t) => t.isCompleted).length;
@@ -153,7 +165,7 @@ class _DayScreenState extends State<DayScreen> {
                     task: task,
                     onToggle: () => _toggleTask(task.id),
                     onDelete: () => _deleteTask(task.id),
-                    onEdit: (title) => _editTask(task.id, title),
+                    onTap: () => _showEditSheet(task.id, task.title),
                   );
                 },
                 childCount: _pendingTasks.length,
@@ -176,7 +188,7 @@ class _DayScreenState extends State<DayScreen> {
                     task: task,
                     onToggle: () => _toggleTask(task.id),
                     onDelete: () => _deleteTask(task.id),
-                    onEdit: (title) => _editTask(task.id, title),
+                    onTap: () => _showEditSheet(task.id, task.title),
                   );
                 },
                 childCount: _completedTasks.length,

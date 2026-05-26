@@ -4,21 +4,24 @@ import '../app.dart';
 
 class AddTaskSheet extends StatefulWidget {
   final ValueChanged<String> onAdd;
+  final String? initialValue; // null = new task, non-null = editing
 
-  const AddTaskSheet({super.key, required this.onAdd});
+  const AddTaskSheet({super.key, required this.onAdd, this.initialValue});
 
   @override
   State<AddTaskSheet> createState() => _AddTaskSheetState();
 }
 
 class _AddTaskSheetState extends State<AddTaskSheet> {
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
+
+  bool get _isEditing => widget.initialValue != null;
 
   @override
   void initState() {
     super.initState();
-    // Delay focus so the keyboard animates with the sheet
+    _controller = TextEditingController(text: widget.initialValue ?? '');
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _focusNode.requestFocus();
     });
@@ -60,7 +63,6 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Handle
                 Center(
                   child: Container(
                     width: 36,
@@ -72,9 +74,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'NEW TASK',
-                  style: TextStyle(
+                Text(
+                  _isEditing ? 'EDIT TASK' : 'NEW TASK',
+                  style: const TextStyle(
                     color: AppTheme.muted,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -95,9 +97,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           fontFamily: 'sans-serif',
                           fontWeight: FontWeight.w500,
                         ),
-                        decoration: const InputDecoration(
-                          hintText: 'What needs to be done?',
-                          hintStyle: TextStyle(
+                        decoration: InputDecoration(
+                          hintText: _isEditing
+                              ? 'Update task...'
+                              : 'What needs to be done?',
+                          hintStyle: const TextStyle(
                             color: AppTheme.muted,
                             fontSize: 18,
                             fontFamily: 'sans-serif',
