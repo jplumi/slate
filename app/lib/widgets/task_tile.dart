@@ -7,14 +7,14 @@ class TaskTile extends StatefulWidget {
   final Task task;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
-  final ValueChanged<String> onEdit;
+  final VoidCallback onTap; // opens edit sheet
 
   const TaskTile({
     super.key,
     required this.task,
     required this.onToggle,
     required this.onDelete,
-    required this.onEdit,
+    required this.onTap,
   });
 
   @override
@@ -25,8 +25,6 @@ class _TaskTileState extends State<TaskTile>
     with SingleTickerProviderStateMixin {
   late AnimationController _checkController;
   late Animation<double> _checkScale;
-  bool _isEditing = false;
-  late TextEditingController _editController;
 
   @override
   void initState() {
@@ -38,34 +36,18 @@ class _TaskTileState extends State<TaskTile>
     _checkScale = Tween<double>(begin: 1, end: 0.85).animate(
       CurvedAnimation(parent: _checkController, curve: Curves.easeInOut),
     );
-    _editController = TextEditingController(text: widget.task.title);
   }
 
   @override
   void dispose() {
     _checkController.dispose();
-    _editController.dispose();
     super.dispose();
   }
 
-  void _onToggle() async {
+  void _onToggle() {
     HapticFeedback.lightImpact();
     widget.onToggle();
     _checkController.forward().then((_) => _checkController.reverse());
-  }
-
-  void _startEditing() {
-    setState(() => _isEditing = true);
-    _editController.text = widget.task.title;
-    _editController.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: widget.task.title.length,
-    );
-  }
-
-  void _submitEdit() {
-    setState(() => _isEditing = false);
-    widget.onEdit(_editController.text);
   }
 
   @override
@@ -84,7 +66,7 @@ class _TaskTileState extends State<TaskTile>
         widget.onDelete();
       },
       child: GestureDetector(
-        onDoubleTap: _startEditing,
+        onTap: widget.onTap,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           decoration: BoxDecoration(
@@ -104,79 +86,63 @@ class _TaskTileState extends State<TaskTile>
           ),
           child: Material(
             color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: _isEditing ? null : () {},
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    ScaleTransition(
-                      scale: _checkScale,
-                      child: GestureDetector(
-                        onTap: _onToggle,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 80),
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  ScaleTransition(
+                    scale: _checkScale,
+                    child: GestureDetector(
+                      onTap: _onToggle,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 80),
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: widget.task.isCompleted
+                              ? AppTheme.checkGreen
+                              : Colors.transparent,
+                          border: Border.all(
                             color: widget.task.isCompleted
                                 ? AppTheme.checkGreen
-                                : Colors.transparent,
-                            border: Border.all(
-                              color: widget.task.isCompleted
-                                  ? AppTheme.checkGreen
-                                  : AppTheme.muted,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(7),
+                                : AppTheme.muted,
+                            width: 2,
                           ),
-                          child: widget.task.isCompleted
-                              ? const Icon(Icons.check,
-                                  size: 14, color: Colors.white)
-                              : null,
+                          borderRadius: BorderRadius.circular(7),
                         ),
+                        child: widget.task.isCompleted
+                            ? const Icon(Icons.check,
+                                size: 14, color: Colors.white)
+                            : null,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: _isEditing
-                          ? TextField(
-                              controller: _editController,
-                              autofocus: true,
-                              style: const TextStyle(
-                                color: AppTheme.ink,
-                                fontSize: 15,
-                                fontFamily: 'sans-serif',
-                              ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onSubmitted: (_) => _submitEdit(),
-                              onTapOutside: (_) => _submitEdit(),
-                            )
-                          : AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 80),
-                              style: TextStyle(
-                                color: widget.task.isCompleted
-                                    ? AppTheme.muted
-                                    : AppTheme.ink,
-                                fontSize: 15,
-                                fontFamily: 'sans-serif',
-                                height: 1.4,
-                                decoration: widget.task.isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none,
-                                decorationColor: AppTheme.muted,
-                              ),
-                              child: Text(widget.task.title),
-                            ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 80),
+                      style: TextStyle(
+                        color: widget.task.isCompleted
+                            ? AppTheme.muted
+                            : AppTheme.ink,
+                        fontSize: 15,
+                        fontFamily: 'sans-serif',
+                        height: 1.4,
+                        decoration: widget.task.isCompleted
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                        decorationColor: AppTheme.muted,
+                      ),
+                      child: Text(widget.task.title),
                     ),
-                  ],
-                ),
+                  ),
+                  // subtle edit hint icon
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: AppTheme.muted.withValues(alpha: 0.5),
+                  ),
+                ],
               ),
             ),
           ),
