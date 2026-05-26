@@ -6,6 +6,10 @@ import '../services/task_storage.dart';
 import '../widgets/task_tile.dart';
 import '../widgets/add_task_sheet.dart';
 
+extension _IntLet on int {
+  T let<T>(T Function(int) f) => f(this);
+}
+
 class DayScreen extends StatefulWidget {
   final DateTime date;
 
@@ -156,20 +160,23 @@ class _DayScreenState extends State<DayScreen> {
                 false,
               ),
             ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final task = _pendingTasks[index];
-                  return TaskTile(
-                    key: ValueKey(task.id),
+            SliverReorderableList(
+              itemCount: _pendingTasks.length,
+              onReorder: _reorderTasks,
+              itemBuilder: (context, index) {
+                final task = _pendingTasks[index];
+                return ReorderableDelayedDragStartListener(
+                  key: ValueKey(task.id),
+                  index: index,
+                  child: TaskTile(
+                    key: ValueKey('tile_${task.id}'),
                     task: task,
                     onToggle: () => _toggleTask(task.id),
                     onDelete: () => _deleteTask(task.id),
                     onTap: () => _showEditSheet(task.id, task.title),
-                  );
-                },
-                childCount: _pendingTasks.length,
-              ),
+                  ),
+                );
+              },
             ),
           ],
           if (_completedTasks.isNotEmpty) ...[
@@ -301,5 +308,25 @@ class _DayScreenState extends State<DayScreen> {
         ),
       ),
     );
+  }
+
+  void _reorderTasks(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex--;
+      final task = _pendingTasks[oldIndex];
+      // Work on the full _tasks list
+      final fullOldIndex = _tasks.indexOf(task);
+      _tasks.removeAt(fullOldIndex);
+      // Find insertion point in full list (before completed tasks)
+      final targetTask =
+          newIndex < _pendingTasks.length ? _pendingTasks[newIndex] : null;
+      final fullNewIndex = targetTask != null
+          ? _tasks.indexOf(targetTask)
+          : _tasks
+              .indexWhere((t) => t.isCompleted)
+              .let((i) => i == -1 ? _tasks.length : i);
+      _tasks.insert(fullNewIndex, task);
+    });
+    _saveTasks();
   }
 }

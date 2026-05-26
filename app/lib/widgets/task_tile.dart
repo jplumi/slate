@@ -136,12 +136,6 @@ class _TaskTileState extends State<TaskTile>
                       child: Text(widget.task.title),
                     ),
                   ),
-                  // subtle edit hint icon
-                  Icon(
-                    Icons.chevron_right,
-                    size: 16,
-                    color: AppTheme.muted.withValues(alpha: 0.5),
-                  ),
                 ],
               ),
             ),
