@@ -358,7 +358,8 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
   Widget _buildDateGroup(String dateStr, List<Task> tasks, bool isToday) {
     final pending = tasks.where((t) => !t.isCompleted).toList();
-    final done = tasks.where((t) => t.isCompleted).toList();
+    final done =
+        _pendingOnly ? <Task>[] : tasks.where((t) => t.isCompleted).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +406,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               task: t,
               onToggle: () => _toggleTask(dateStr, t.id),
               onDelete: () => _deleteTask(dateStr, t.id),
-              onTap: () {}, // editing not supported in this view
+              onTap: () {},
             )),
         ...done.map((t) => TaskTile(
               key: ValueKey('all_done_${t.id}'),
