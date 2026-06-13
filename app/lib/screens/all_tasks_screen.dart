@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo_app/widgets/task_tile.dart';
 import '../app.dart';
 import '../models/task.dart';
 import '../services/task_storage.dart';
+
+enum _SortOrder { newestFirst, oldestFirst }
 
 class AllTasksScreen extends StatefulWidget {
   const AllTasksScreen({super.key});
@@ -12,14 +16,61 @@ class AllTasksScreen extends StatefulWidget {
 }
 
 class _AllTasksScreenState extends State<AllTasksScreen> {
-  // Map of date string → task list, sorted by date
+  static const _keySortOrder = 'all_tasks_sort_order';
+  static const _keyPendingOnly = 'all_tasks_pending_only';
+
   Map<String, List<Task>> _tasksByDate = {};
   bool _loading = true;
+  _SortOrder _sortOrder = _SortOrder.newestFirst;
+  bool _pendingOnly = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAll();
+    _loadPrefs().then((_) => _loadAll());
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _sortOrder = (prefs.getString(_keySortOrder) == 'oldestFirst')
+          ? _SortOrder.oldestFirst
+          : _SortOrder.newestFirst;
+      _pendingOnly = prefs.getBool(_keyPendingOnly) ?? false;
+    });
+  }
+
+  Future<void> _savePrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keySortOrder,
+        _sortOrder == _SortOrder.newestFirst ? 'newestFirst' : 'oldestFirst');
+    await prefs.setBool(_keyPendingOnly, _pendingOnly);
+  }
+
+  Future<void> _toggleTask(String dateStr, String taskId) async {
+    final parts = dateStr.split('-');
+    final date =
+        DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    final tasks = _tasksByDate[dateStr]!.map((t) {
+      return t.id == taskId ? t.copyWith(isCompleted: !t.isCompleted) : t;
+    }).toList();
+    await TaskStorage.saveTasks(date, tasks);
+    setState(() => _tasksByDate[dateStr] = tasks);
+  }
+
+  Future<void> _deleteTask(String dateStr, String taskId) async {
+    final parts = dateStr.split('-');
+    final date =
+        DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    final tasks = _tasksByDate[dateStr]!.where((t) => t.id != taskId).toList();
+    await TaskStorage.saveTasks(date, tasks);
+    setState(() {
+      if (tasks.isEmpty) {
+        _tasksByDate.remove(dateStr);
+      } else {
+        _tasksByDate[dateStr] = tasks;
+      }
+    });
   }
 
   Future<void> _loadAll() async {
@@ -37,7 +88,18 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
       final tasks = await TaskStorage.loadTasks(date);
       if (tasks.isNotEmpty) result[dateStr] = tasks;
     }
-    if (mounted) setState(() { _tasksByDate = result; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _tasksByDate = result;
+        _loading = false;
+      });
+    }
+  }
+
+  List<String> get _sortedKeys {
+    final keys = _tasksByDate.keys.toList()..sort();
+    if (_sortOrder == _SortOrder.newestFirst) return keys.reversed.toList();
+    return keys;
   }
 
   int get _completedCount =>
@@ -50,14 +112,28 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
         backgroundColor: AppTheme.cream,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete all done tasks?',
-            style: TextStyle(fontFamily: 'sans-serif', fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        content: const Text('This will permanently remove completed tasks across all days.',
-            style: TextStyle(fontFamily: 'sans-serif', color: AppTheme.muted, fontSize: 14)),
+            style: TextStyle(
+                fontFamily: 'sans-serif',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink)),
+        content: const Text(
+            'This will permanently remove completed tasks across all days.',
+            style: TextStyle(
+                fontFamily: 'sans-serif', color: AppTheme.muted, fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel', style: TextStyle(color: AppTheme.muted, fontFamily: 'sans-serif'))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Delete', style: TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w700, fontFamily: 'sans-serif'))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel',
+                  style: TextStyle(
+                      color: AppTheme.muted, fontFamily: 'sans-serif'))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete',
+                  style: TextStyle(
+                      color: AppTheme.accent,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'sans-serif'))),
         ],
       ),
     );
@@ -65,7 +141,8 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
     for (final entry in _tasksByDate.entries) {
       final parts = entry.key.split('-');
-      final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      final date = DateTime(
+          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
       final remaining = entry.value.where((t) => !t.isCompleted).toList();
       await TaskStorage.saveTasks(date, remaining);
     }
@@ -81,7 +158,8 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
   String _formatDateHeader(String dateStr) {
     final parts = dateStr.split('-');
-    final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    final date =
+        DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
     return DateFormat('EEEE · MMM d').format(date);
   }
 
@@ -96,8 +174,11 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('All tasks',
-            style: TextStyle(color: Colors.white, fontSize: 18,
-                fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'sans-serif')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.ink))
@@ -106,6 +187,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               : Column(
                   children: [
                     _buildActionBar(),
+                    _buildFilterBar(),
                     Expanded(child: _buildList()),
                   ],
                 ),
@@ -120,7 +202,9 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
       child: Row(
         children: [
           Text(
-            count == 0 ? 'No completed tasks' : '$count completed across all days',
+            count == 0
+                ? 'No completed tasks'
+                : '$count completed across all days',
             style: const TextStyle(
                 fontSize: 12, color: AppTheme.muted, fontFamily: 'sans-serif'),
           ),
@@ -129,7 +213,8 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
             GestureDetector(
               onTap: _deleteAllDone,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppTheme.accentSoft,
                   borderRadius: BorderRadius.circular(20),
@@ -137,12 +222,15 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.delete_outline, size: 14, color: AppTheme.accent),
+                    Icon(Icons.delete_outline,
+                        size: 14, color: AppTheme.accent),
                     SizedBox(width: 4),
                     Text('Delete done',
                         style: TextStyle(
-                            fontSize: 12, color: AppTheme.accent,
-                            fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
+                            fontSize: 12,
+                            color: AppTheme.accent,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'sans-serif')),
                   ],
                 ),
               ),
@@ -152,11 +240,115 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
     );
   }
 
+  Widget _buildFilterBar() {
+    return Container(
+      color: AppTheme.cream,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _sortOrder = _sortOrder == _SortOrder.newestFirst
+                    ? _SortOrder.oldestFirst
+                    : _SortOrder.newestFirst;
+              });
+              _savePrefs();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.ink,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _sortOrder == _SortOrder.newestFirst
+                        ? Icons.arrow_downward_rounded
+                        : Icons.arrow_upward_rounded,
+                    size: 13,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    _sortOrder == _SortOrder.newestFirst
+                        ? 'Newest first'
+                        : 'Oldest first',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'sans-serif'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              setState(() => _pendingOnly = !_pendingOnly);
+              _savePrefs();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _pendingOnly ? AppTheme.accent : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _pendingOnly ? AppTheme.accent : AppTheme.divider,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _pendingOnly
+                        ? Icons.check_box_outlined
+                        : Icons.check_box_outline_blank,
+                    size: 13,
+                    color: _pendingOnly ? Colors.white : AppTheme.muted,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    'Pending only',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: _pendingOnly ? Colors.white : AppTheme.muted,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'sans-serif'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildList() {
+    final keys = _sortedKeys;
+    final visibleKeys = _pendingOnly
+        ? keys
+            .where((k) => (_tasksByDate[k] ?? []).any((t) => !t.isCompleted))
+            .toList()
+        : keys;
+
+    if (visibleKeys.isEmpty) {
+      return const Center(
+        child: Text('No pending tasks',
+            style: TextStyle(
+                color: AppTheme.muted, fontSize: 16, fontFamily: 'sans-serif')),
+      );
+    }
+
     return ListView.builder(
-      itemCount: _tasksByDate.length,
+      itemCount: visibleKeys.length,
       itemBuilder: (context, i) {
-        final dateStr = _tasksByDate.keys.elementAt(i);
+        final dateStr = visibleKeys[i];
         final tasks = _tasksByDate[dateStr]!;
         final today = _isToday(dateStr);
         return _buildDateGroup(dateStr, tasks, today);
@@ -188,14 +380,19 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               if (isToday) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
                     borderRadius: BorderRadius.circular(3),
                   ),
                   child: const Text('TODAY',
-                      style: TextStyle(color: Colors.white, fontSize: 8,
-                          fontWeight: FontWeight.w800, letterSpacing: 1.2, fontFamily: 'sans-serif')),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                          fontFamily: 'sans-serif')),
                 ),
               ],
               const SizedBox(width: 8),
@@ -203,59 +400,29 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
             ],
           ),
         ),
-        ...pending.map((t) => _buildTaskRow(t, false)),
-        ...done.map((t) => _buildTaskRow(t, true)),
+        ...pending.map((t) => TaskTile(
+              key: ValueKey('all_${t.id}'),
+              task: t,
+              onToggle: () => _toggleTask(dateStr, t.id),
+              onDelete: () => _deleteTask(dateStr, t.id),
+              onTap: () {}, // editing not supported in this view
+            )),
+        ...done.map((t) => TaskTile(
+              key: ValueKey('all_done_${t.id}'),
+              task: t,
+              onToggle: () => _toggleTask(dateStr, t.id),
+              onDelete: () => _deleteTask(dateStr, t.id),
+              onTap: () {},
+            )),
       ],
-    );
-  }
-
-  Widget _buildTaskRow(Task task, bool completed) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      decoration: BoxDecoration(
-        color: completed ? Colors.white.withValues(alpha: 0.5) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: completed ? [] : [
-          BoxShadow(color: AppTheme.ink.withValues(alpha: 0.05),
-              blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        child: Row(
-          children: [
-            Container(
-              width: 20, height: 20,
-              decoration: BoxDecoration(
-                color: completed ? AppTheme.checkGreen : Colors.transparent,
-                border: Border.all(
-                    color: completed ? AppTheme.checkGreen : AppTheme.muted, width: 2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: completed
-                  ? const Icon(Icons.check, size: 12, color: Colors.white)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(task.title,
-                  style: TextStyle(
-                    fontSize: 14, fontFamily: 'sans-serif',
-                    color: completed ? AppTheme.muted : AppTheme.ink,
-                    decoration: completed ? TextDecoration.lineThrough : TextDecoration.none,
-                    decorationColor: AppTheme.muted,
-                  )),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildEmpty() {
     return const Center(
       child: Text('No tasks yet',
-          style: TextStyle(color: AppTheme.muted, fontSize: 16, fontFamily: 'sans-serif')),
+          style: TextStyle(
+              color: AppTheme.muted, fontSize: 16, fontFamily: 'sans-serif')),
     );
   }
 }
