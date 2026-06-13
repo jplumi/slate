@@ -3,17 +3,13 @@
 
 # Slate — Flutter App
 
-A clean, minimal daily task scheduler I built for my own use.
+A clean, minimal daily task scheduler built for personal use. Tasks are organized by day, with swipe navigation between dates and a calendar for quick jumps.
 
 ## Features
 
 - **Day view** — current date opens by default
 - **Swipe navigation** — slide left/right to move between days  
 - **Calendar view** — tap the calendar icon to jump to any date
-- **Add tasks** — tap the **+** button, or tap anywhere on an empty screen
-- **Check off tasks** — tap the checkbox; done tasks move to a "Done" section
-- **Edit tasks** — double-tap any task to edit inline
-- **Delete tasks** — swipe a task left to delete it
 - **Persistent storage** — all tasks saved locally via `shared_preferences`
 - **Dot indicators** on calendar for days that have tasks
 
@@ -29,7 +25,7 @@ A clean, minimal daily task scheduler I built for my own use.
 
 ```bash
 # 1. Navigate to the project
-cd todo_app
+cd slate
 
 # 2. Install dependencies
 flutter pub get
