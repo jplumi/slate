@@ -1,4 +1,4 @@
-package com.example.todo_app
+package com.jplumi.slate
 
 import io.flutter.embedding.android.FlutterActivity
 
