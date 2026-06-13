@@ -81,7 +81,7 @@ class _DayScreenState extends State<DayScreen> {
     _saveTasks();
   }
 
-  void _showAddSheet() {
+  void showAddSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -132,12 +132,7 @@ class _DayScreenState extends State<DayScreen> {
         body: _loading
             ? const Center(
                 child: CircularProgressIndicator(color: AppTheme.ink))
-            : Stack(
-                children: [
-                  _buildBody(),
-                  _buildFAB(),
-                ],
-              ),
+            : _buildBody(),
       ),
     );
   }
@@ -149,7 +144,7 @@ class _DayScreenState extends State<DayScreen> {
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: _showAddSheet,
+      onTap: showAddSheet,
       child: CustomScrollView(
         physics: const ClampingScrollPhysics(),
         slivers: [
@@ -240,7 +235,7 @@ class _DayScreenState extends State<DayScreen> {
   Widget _buildEmptyState() {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: _showAddSheet,
+      onTap: showAddSheet,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -278,33 +273,6 @@ class _DayScreenState extends State<DayScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFAB() {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    return Positioned(
-      bottom: 28 + bottomInset,
-      right: 24,
-      child: GestureDetector(
-        onTap: _showAddSheet,
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AppTheme.ink,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.ink.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
         ),
       ),
     );

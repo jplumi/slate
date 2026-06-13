@@ -18,6 +18,8 @@ class _HomeScreenState extends State<HomeScreen> {
   static const int _todayIndex = 10000;
   static const int _totalPages = 20000;
 
+  final Map<int, GlobalKey<State<StatefulWidget>>> _dayKeys = {};
+
   late final PageController _pageController;
   late DateTime _currentDate;
   int _currentIndex = _todayIndex;
@@ -33,6 +35,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  GlobalKey<State<StatefulWidget>> _keyForIndex(int index) {
+    return _dayKeys.putIfAbsent(
+        index, () => GlobalKey<State<StatefulWidget>>());
   }
 
   DateTime _dateFromIndex(int index) {
@@ -125,10 +132,11 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               itemBuilder: (context, index) {
                 final date = _dateFromIndex(index);
-                return DayScreen(date: date);
+                return DayScreen(key: _keyForIndex(index), date: date);
               },
             ),
           ),
+          _buildBottomBar(),
         ],
       ),
     );
@@ -145,111 +153,70 @@ class _HomeScreenState extends State<HomeScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 16, 20),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          dayName,
-                          style: const TextStyle(
-                            color: AppTheme.accent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2.5,
-                            fontFamily: 'sans-serif',
-                          ),
-                        ),
-                        if (isToday) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accent,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'TODAY',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.5,
-                                fontFamily: 'sans-serif',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          dateNum,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 52,
-                            fontWeight: FontWeight.w800,
-                            height: 1,
-                            fontFamily: 'sans-serif',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            monthYear,
-                            style: const TextStyle(
-                              color: Color(0xFFAAAAAA),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              fontFamily: 'sans-serif',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Column(
+              Row(
                 children: [
-                  const SizedBox(height: 4),
-                  IconButton(
-                    onPressed: _openAllTasks,
-                    icon: const Icon(Icons.list_alt_rounded),
-                    color: Colors.white,
-                    iconSize: 26,
-                    tooltip: 'All tasks',
+                  Text(
+                    dayName,
+                    style: const TextStyle(
+                      color: AppTheme.accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2.5,
+                      fontFamily: 'sans-serif',
+                    ),
                   ),
-                  IconButton(
-                    onPressed: _openCalendar,
-                    icon: const Icon(Icons.calendar_month_rounded),
-                    color: Colors.white,
-                    iconSize: 24,
-                    tooltip: 'Open calendar',
-                  ),
-                  if (!isToday)
-                    GestureDetector(
-                      onTap: () => _jumpToDate(DateTime.now()),
+                  if (isToday) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accent,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: const Text(
-                        'Today',
+                        'TODAY',
                         style: TextStyle(
-                          color: AppTheme.accent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.5,
                           fontFamily: 'sans-serif',
                         ),
                       ),
                     ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    dateNum,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                      fontFamily: 'sans-serif',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    monthYear,
+                    style: const TextStyle(
+                      color: Color(0xFFAAAAAA),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'sans-serif',
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -257,5 +224,75 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildBottomBar() {
+    return Container(
+      color: AppTheme.ink,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildBarIcon(Icons.calendar_today_rounded, 'Today', () {
+                _jumpToDate(DateTime.now());
+              }),
+              _buildBarIcon(Icons.list_alt_rounded, 'All tasks', _openAllTasks),
+              GestureDetector(
+                onTap: _openAddTask,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.accent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 26),
+                ),
+              ),
+              _buildBarIcon(
+                  Icons.calendar_month_rounded, 'Calendar', _openCalendar),
+              _buildBarIcon(Icons.settings_outlined, 'Settings', () {
+                // placeholder for future settings screen
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBarIcon(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 48,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white.withValues(alpha: 0.55), size: 24),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0x8DFFFFFF),
+                fontSize: 9,
+                fontFamily: 'sans-serif',
+                letterSpacing: 0.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openAddTask() {
+    final key = _keyForIndex(_currentIndex);
+    final state = key.currentState as dynamic;
+    state?.showAddSheet();
   }
 }
