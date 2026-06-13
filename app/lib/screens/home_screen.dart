@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../app.dart';
-import 'day_screen.dart';
 import 'calendar_screen.dart';
+import 'day_screen.dart';
+import 'all_tasks_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,7 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
             position: Tween<Offset>(
               begin: const Offset(0, 1),
               end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOut)),
             child: child,
           );
         },
@@ -76,9 +79,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _openAllTasks() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const AllTasksScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   @override
@@ -143,7 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (isToday) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppTheme.accent,
                               borderRadius: BorderRadius.circular(4),
@@ -198,10 +224,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const SizedBox(height: 4),
                   IconButton(
+                    onPressed: _openAllTasks,
+                    icon: const Icon(Icons.list_alt_rounded),
+                    color: Colors.white,
+                    iconSize: 26,
+                    tooltip: 'All tasks',
+                  ),
+                  IconButton(
                     onPressed: _openCalendar,
                     icon: const Icon(Icons.calendar_month_rounded),
                     color: Colors.white,
-                    iconSize: 26,
+                    iconSize: 24,
                     tooltip: 'Open calendar',
                   ),
                   if (!isToday)
