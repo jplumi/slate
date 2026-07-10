@@ -17,23 +17,22 @@ type Task struct {
 	Title       string `json:"title"`
 	IsCompleted bool   `json:"isCompleted"`
 	Position    int    `json:"position"`
-	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT * FROM tasks")
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		apiError(w, err, "Failed to get tasks", http.StatusInternalServerError)
 		return
 	}
 
 	tasks := []Task{}
 	for rows.Next() {
 		task := Task{}
-		err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.IsCompleted, &task.Position, &task.CreatedAt)
+		err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.IsCompleted, &task.Position, &task.UpdatedAt)
 		if err != nil {
-			log.Printf("Error occurred: %v\n", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			apiError(w, err, "Failed to get tasks", http.StatusInternalServerError)
 			return
 		}
 		tasks = append(tasks, task)
@@ -48,22 +47,29 @@ func saveTask(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&newTask)
 	defer r.Body.Close()
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		apiError(w, err, "Failed to save task", http.StatusInternalServerError)
 		return
 	}
 
-	_, err = db.Exec(`INSERT INTO tasks (ID, date, title, is_completed, position, created_at)
-		VALUES (?,?,?,?,?,?)`,
+	_, err = db.Exec(`
+		INSERT INTO tasks (ID, date, title, is_completed, position, updated_at)
+		VALUES (?,?,?,?,?,?)
+		ON CONFLICT(id) DO UPDATE 
+		SET date=EXCLUDED.date,
+			title=EXCLUDED.title,
+			is_completed=EXCLUDED.is_completed,
+			position=EXCLUDED.position,
+			updated_at=EXCLUDED.updated_at
+		`,
 		newTask.ID,
 		newTask.Date,
 		newTask.Title,
 		newTask.IsCompleted,
 		newTask.Position,
-		newTask.CreatedAt,
+		newTask.UpdatedAt,
 	)
 	if err != nil {
-		log.Printf("Failed to execute insert: %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		apiError(w, err, "Failed to execute insert", http.StatusInternalServerError)
 		return
 	}
 
@@ -91,6 +97,40 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func getChangesSince(w http.ResponseWriter, r *http.Request) {
+	since := r.URL.Query().Get("since")
+	if since == "" {
+		http.Error(w, "'since' parameter is empty", http.StatusBadRequest)
+		return
+	}
+
+	rows, err := db.Query("SELECT * FROM tasks WHERE date > ?", since)
+	if err != nil {
+		apiError(w, err, "Failed to execute query", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	tasks := []Task{}
+	for rows.Next() {
+		task := Task{}
+		err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.IsCompleted, &task.Position, &task.UpdatedAt)
+		if err != nil {
+			apiError(w, err, "Failed to get tasks", http.StatusInternalServerError)
+			return
+		}
+		tasks = append(tasks, task)
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tasks)
+}
+
+func apiError(w http.ResponseWriter, err error, msg string, status int) {
+	log.Printf("Error %v | %v: %v\n", status, msg, err.Error())
+	http.Error(w, msg, status)
+}
+
 func main() {
 	var err error
 	db, err = database.InitDB()
@@ -102,6 +142,7 @@ func main() {
 	http.HandleFunc("GET /tasks", getTasks)
 	http.HandleFunc("POST /tasks", saveTask)
 	http.HandleFunc("DELETE /tasks/{id}", deleteTask)
+	http.HandleFunc("GET /tasks/changes", getChangesSince)
 
 	log.Println("Server started.")
 	log.Fatal(http.ListenAndServe(":8081", nil))
