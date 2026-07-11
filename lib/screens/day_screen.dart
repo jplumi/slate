@@ -53,12 +53,13 @@ class _DayScreenState extends State<DayScreen> {
     await TaskStorage.saveTasks(widget.date, _tasks);
   }
 
-  void _addTask(String title) {
+void _addTask(String title) {
     if (title.trim().isEmpty) return;
     final task = Task(
       id: _uuid.v4(),
       title: title.trim(),
       createdAt: DateTime.now(),
+      sortOrder: _tasks.length,
     );
     setState(() => _tasks.add(task));
     _saveTasks();
@@ -157,7 +158,7 @@ class _DayScreenState extends State<DayScreen> {
             ),
             SliverReorderableList(
               itemCount: _pendingTasks.length,
-              onReorder: _reorderTasks,
+              onReorderItem: _reorderTasks,
               itemBuilder: (context, index) {
                 final task = _pendingTasks[index];
                 return ReorderableDelayedDragStartListener(
@@ -278,7 +279,7 @@ class _DayScreenState extends State<DayScreen> {
     );
   }
 
-  void _reorderTasks(int oldIndex, int newIndex) {
+void _reorderTasks(int oldIndex, int newIndex) {
     setState(() {
       if (newIndex > oldIndex) newIndex--;
       final task = _pendingTasks[oldIndex];
@@ -294,6 +295,12 @@ class _DayScreenState extends State<DayScreen> {
               .indexWhere((t) => t.isCompleted)
               .let((i) => i == -1 ? _tasks.length : i);
       _tasks.insert(fullNewIndex, task);
+
+      // Restamp sortOrder to match new positions so the server payload
+      // reflects exactly where each task sits.
+      for (var i = 0; i < _tasks.length; i++) {
+        _tasks[i] = _tasks[i].copyWith(sortOrder: i);
+      }
     });
     _saveTasks();
   }
