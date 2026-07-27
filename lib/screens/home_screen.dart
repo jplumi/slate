@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:todo_app/services/sync_service.dart';
 
 import '../app.dart';
 import 'calendar_screen.dart';
@@ -7,7 +8,9 @@ import 'day_screen.dart';
 import 'all_tasks_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final SyncService syncService;
+
+  const HomeScreen({super.key, required this.syncService});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -190,6 +193,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ],
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: widget.syncService.syncNow,
+                    child: const Icon(
+                      Icons.sync_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 2),

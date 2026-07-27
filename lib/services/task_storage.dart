@@ -1,9 +1,12 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/task.dart';
 import 'database_helper.dart';
 
 class TaskStorage {
   static Future<Database> get _db async => DatabaseHelper.instance.database;
+
+  static const String _lastSyncKey = 'last_sync_time';
 
   static String _dateStr(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -19,10 +22,11 @@ class TaskStorage {
     return rows.map((r) => Task.fromMap(r)).toList();
   }
 
+  // TODO: refactor: create separate method for delete; remove date parameter
   static Future<void> saveTasks(DateTime date, List<Task> tasks) async {
     final db = await _db;
     final dateStr = _dateStr(date);
-    final nowIso = DateTime.now().toIso8601String();
+    final nowIso = DateTime.now().toUtc().toIso8601String();
 
     await db.transaction((txn) async {
       final existingRows = await txn.query(
@@ -72,5 +76,53 @@ class TaskStorage {
     );
     return rows.map((r) => Task.fromMap(r)).toList();
   }
-}
 
+  static Future<void> markSynced(String id) async {
+    final db = await _db;
+    await db.update(
+      'tasks',
+      {'isDirty': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<DateTime?> getLastSyncTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final time = prefs.getInt(_lastSyncKey);
+    return time != null ? DateTime.fromMillisecondsSinceEpoch(time) : null;
+  }
+
+  static Future<void> setLastSyncTime(DateTime time) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastSyncKey, time.millisecondsSinceEpoch);
+  }
+
+  static Future<void> mergeRemoteTask(Task task) async {
+    final db = await _db;
+
+    final existingRows = await db.query(
+      'tasks',
+      where: 'id = ?',
+      whereArgs: [task.id],
+    );
+
+    if (existingRows.isNotEmpty) {
+      final localUpdatedAt =
+          DateTime.parse(existingRows.first['updatedAt'] as String);
+      if (!task.updatedAt.isAfter(localUpdatedAt)) {
+        // Local copy is newer or equal; nothing to do.
+        return;
+      }
+    }
+
+    final map = task.toMap();
+    map['isDirty'] = 0;
+    map['date'] = _dateStr(task.date);
+    await db.insert(
+      'tasks',
+      map,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+}
