@@ -58,7 +58,7 @@ void _addTask(String title) {
     final task = Task(
       id: _uuid.v4(),
       title: title.trim(),
-      createdAt: DateTime.now(),
+      date: DateTime.now(),
       sortOrder: _tasks.length,
     );
     setState(() => _tasks.add(task));

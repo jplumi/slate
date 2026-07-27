@@ -25,7 +25,6 @@ class DatabaseHelper {
             date TEXT NOT NULL,
             title TEXT NOT NULL,
             isCompleted INTEGER NOT NULL DEFAULT 0,
-            createdAt TEXT NOT NULL,
             updatedAt TEXT NOT NULL,
             sortOrder INTEGER NOT NULL DEFAULT 0,
             isDeleted INTEGER NOT NULL DEFAULT 0,

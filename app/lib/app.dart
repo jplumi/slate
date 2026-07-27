@@ -1,8 +1,38 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
+import 'services/api_client.dart';
+import 'services/sync_service.dart';
 
-class TodoApp extends StatelessWidget {
+class TodoApp extends StatefulWidget {
   const TodoApp({super.key});
+
+  @override
+  State<TodoApp> createState() => _TodoAppState();
+}
+
+class _TodoAppState extends State<TodoApp> with WidgetsBindingObserver {
+  late final SyncService syncService;
+
+  @override
+  void initState() {
+    super.initState();
+    syncService = SyncService(ApiClient())..start();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      syncService.syncNow();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    syncService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +40,7 @@ class TodoApp extends StatelessWidget {
       title: 'Slate',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: const HomeScreen(),
+      home: HomeScreen(syncService: syncService),
     );
   }
 }
