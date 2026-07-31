@@ -71,6 +71,7 @@ class Task {
         isCompleted: (map['isCompleted'] as bool),
         date: DateTime.parse(map['date'] as String),
         updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt']),
+        isDeleted: (map['isDeleted'] as bool),
         sortOrder: map['sortOrder'] as int? ?? 0,
       );
 

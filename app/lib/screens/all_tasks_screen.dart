@@ -48,22 +48,20 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
   }
 
   Future<void> _toggleTask(String dateStr, String taskId) async {
-    final parts = dateStr.split('-');
-    final date =
-        DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-    final tasks = _tasksByDate[dateStr]!.map((t) {
-      return t.id == taskId ? t.copyWith(isCompleted: !t.isCompleted) : t;
-    }).toList();
-    await TaskStorage.saveTasks(date, tasks);
-    setState(() => _tasksByDate[dateStr] = tasks);
+    final tasks = _tasksByDate[dateStr]!;
+    final index = tasks.indexWhere((t) => t.id == taskId);
+    if (index == -1) return;
+    final updated =
+        tasks[index].copyWith(isCompleted: !tasks[index].isCompleted);
+    await TaskStorage.saveTask(updated);
+    final newList = List<Task>.from(tasks);
+    newList[index] = updated;
+    setState(() => _tasksByDate[dateStr] = newList);
   }
 
   Future<void> _deleteTask(String dateStr, String taskId) async {
-    final parts = dateStr.split('-');
-    final date =
-        DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    await TaskStorage.deleteTask(taskId);
     final tasks = _tasksByDate[dateStr]!.where((t) => t.id != taskId).toList();
-    await TaskStorage.saveTasks(date, tasks);
     setState(() {
       if (tasks.isEmpty) {
         _tasksByDate.remove(dateStr);
@@ -139,13 +137,12 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
     );
     if (confirm != true) return;
 
-    for (final entry in _tasksByDate.entries) {
-      final parts = entry.key.split('-');
-      final date = DateTime(
-          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-      final remaining = entry.value.where((t) => !t.isCompleted).toList();
-      await TaskStorage.saveTasks(date, remaining);
-    }
+    final doneIds = _tasksByDate.values
+        .expand((tasks) => tasks)
+        .where((t) => t.isCompleted)
+        .map((t) => t.id)
+        .toList();
+    await TaskStorage.deleteTasks(doneIds);
     await _loadAll();
   }
 

@@ -19,10 +19,10 @@ class ApiClient {
     _checkOk(res);
   }
 
-  Future<void> deleteTask(String id) async {
+  Future<void> deleteTask(Task task) async {
     print("=========== DELETE TASK");
-    final uri = Uri.parse('$baseUrl/tasks/$id');
-    final res = await http.delete(uri, headers: _headers);
+    final uri = Uri.parse('$baseUrl/tasks');
+    final res = await http.delete(uri, headers: _headers, body: jsonEncode(task.toJson()));
     if (res.statusCode == 404) return; // already gone server-side, fine
     _checkOk(res);
   }

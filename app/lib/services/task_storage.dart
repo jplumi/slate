@@ -22,33 +22,51 @@ class TaskStorage {
     return rows.map((r) => Task.fromMap(r)).toList();
   }
 
-  // TODO: refactor: create separate method for delete; remove date parameter
-  static Future<void> saveTasks(DateTime date, List<Task> tasks) async {
+  static Future<void> saveTask(Task task) async {
     final db = await _db;
-    final dateStr = _dateStr(date);
+    final map = task.toMap();
+    map['date'] = _dateStr(task.date);
+    map['isDirty'] = 1;
+    map['updatedAt'] = DateTime.now().toUtc().toIso8601String();
+    await db.insert('tasks', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<void> saveTasks(List<Task> tasks) async {
+    if (tasks.isEmpty) return;
+    final db = await _db;
     final nowIso = DateTime.now().toUtc().toIso8601String();
-
     await db.transaction((txn) async {
-      final existingRows = await txn.query(
-        'tasks',
-        columns: ['id'],
-        where: 'date = ? AND isDeleted = 0',
-        whereArgs: [dateStr],
-      );
-      final existingIds = existingRows.map((r) => r['id'] as String).toSet();
-      final incomingIds = tasks.map((t) => t.id).toSet();
-
-      for (var i = 0; i < tasks.length; i++) {
-        final map = tasks[i].toMap();
-        map['date'] = dateStr;
+      for (final task in tasks) {
+        final map = task.toMap();
+        map['date'] = _dateStr(task.date);
         map['isDirty'] = 1;
         map['updatedAt'] = nowIso;
         await txn.insert('tasks', map,
             conflictAlgorithm: ConflictAlgorithm.replace);
       }
+    });
+  }
 
-      final removedIds = existingIds.difference(incomingIds);
-      for (final id in removedIds) {
+  static Future<void> deleteTask(String id) async {
+    final db = await _db;
+    await db.update(
+      'tasks',
+      {
+        'isDeleted': 1,
+        'isDirty': 1,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<void> deleteTasks(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final db = await _db;
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+    await db.transaction((txn) async {
+      for (final id in ids) {
         await txn.update(
           'tasks',
           {'isDeleted': 1, 'isDirty': 1, 'updatedAt': nowIso},
@@ -85,6 +103,11 @@ class TaskStorage {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  static Future<void> hardDeleteTask(String id) async {
+    final db = await _db;
+    await db.delete('tasks', where: 'id = ?', whereArgs: [id]);
   }
 
   static Future<DateTime?> getLastSyncTime() async {
