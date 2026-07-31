@@ -49,37 +49,30 @@ class _DayScreenState extends State<DayScreen> {
     }
   }
 
-  Future<void> _saveTasks() async {
-    await TaskStorage.saveTasks(widget.date, _tasks);
-  }
-
-void _addTask(String title) {
+  void _addTask(String title) {
     if (title.trim().isEmpty) return;
     final task = Task(
       id: _uuid.v4(),
       title: title.trim(),
-      date: DateTime.now(),
+      date: widget.date,
       sortOrder: _tasks.length,
     );
     setState(() => _tasks.add(task));
-    _saveTasks();
+    TaskStorage.saveTask(task);
   }
 
   void _toggleTask(String id) {
-    setState(() {
-      final index = _tasks.indexWhere((t) => t.id == id);
-      if (index != -1) {
-        _tasks[index] = _tasks[index].copyWith(
-          isCompleted: !_tasks[index].isCompleted,
-        );
-      }
-    });
-    _saveTasks();
+    final index = _tasks.indexWhere((t) => t.id == id);
+    if (index == -1) return;
+    final updated =
+        _tasks[index].copyWith(isCompleted: !_tasks[index].isCompleted);
+    setState(() => _tasks[index] = updated);
+    TaskStorage.saveTask(updated);
   }
 
   void _deleteTask(String id) {
     setState(() => _tasks.removeWhere((t) => t.id == id));
-    _saveTasks();
+    TaskStorage.deleteTask(id);
   }
 
   void showAddSheet() {
@@ -108,13 +101,11 @@ void _addTask(String title) {
       _deleteTask(id);
       return;
     }
-    setState(() {
-      final index = _tasks.indexWhere((t) => t.id == id);
-      if (index != -1) {
-        _tasks[index] = _tasks[index].copyWith(title: newTitle.trim());
-      }
-    });
-    _saveTasks();
+    final index = _tasks.indexWhere((t) => t.id == id);
+    if (index == -1) return;
+    final updated = _tasks[index].copyWith(title: newTitle.trim());
+    setState(() => _tasks[index] = updated);
+    TaskStorage.saveTask(updated);
   }
 
   int get _completedCount => _tasks.where((t) => t.isCompleted).length;
@@ -279,14 +270,11 @@ void _addTask(String title) {
     );
   }
 
-void _reorderTasks(int oldIndex, int newIndex) {
+  void _reorderTasks(int oldIndex, int newIndex) {
     setState(() {
-      if (newIndex > oldIndex) newIndex--;
       final task = _pendingTasks[oldIndex];
-      // Work on the full _tasks list
       final fullOldIndex = _tasks.indexOf(task);
       _tasks.removeAt(fullOldIndex);
-      // Find insertion point in full list (before completed tasks)
       final targetTask =
           newIndex < _pendingTasks.length ? _pendingTasks[newIndex] : null;
       final fullNewIndex = targetTask != null
@@ -296,12 +284,10 @@ void _reorderTasks(int oldIndex, int newIndex) {
               .let((i) => i == -1 ? _tasks.length : i);
       _tasks.insert(fullNewIndex, task);
 
-      // Restamp sortOrder to match new positions so the server payload
-      // reflects exactly where each task sits.
       for (var i = 0; i < _tasks.length; i++) {
         _tasks[i] = _tasks[i].copyWith(sortOrder: i);
       }
     });
-    _saveTasks();
+    TaskStorage.saveTasks(_tasks);
   }
 }

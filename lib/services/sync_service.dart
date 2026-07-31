@@ -32,7 +32,7 @@ class SyncService {
       for (final task in dirty) {
         print("\t${task.title} - ${task.updatedAt}");
         if (task.isDeleted) {
-          await _api.deleteTask(task.id);
+          await _api.deleteTask(task);
         } else {
           await _api.saveTask(task);
         }
@@ -50,7 +50,11 @@ class SyncService {
       }
 
       for (final remoteTask in remoteChanges) {
-        await TaskStorage.mergeRemoteTask(remoteTask);
+        if (remoteTask.isDeleted) {
+          TaskStorage.hardDeleteTask(remoteTask.id);
+        } else {
+          await TaskStorage.mergeRemoteTask(remoteTask);
+        }
       }
 
       await TaskStorage.setLastSyncTime(DateTime.now());
