@@ -32,12 +32,29 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _currentDate = _dateFromIndex(_todayIndex);
     _pageController = PageController(initialPage: _todayIndex);
+    widget.syncService.addListener(_handleSyncUpdate);
   }
 
   @override
   void dispose() {
+    widget.syncService.removeListener(_handleSyncUpdate);
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _handleSyncUpdate() {
+    final error = widget.syncService.lastError;
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sync failed: $error'),
+          backgroundColor: AppTheme.accent,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      widget.syncService.clearError();
+    }
   }
 
   GlobalKey<State<StatefulWidget>> _keyForIndex(int index) {
@@ -199,10 +216,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Spacer(),
                   GestureDetector(
                     onTap: widget.syncService.syncNow,
-                    child: const Icon(
-                      Icons.sync_rounded,
-                      color: Colors.white,
-                      size: 20,
+                    child: AnimatedBuilder(
+                      animation: widget.syncService,
+                      builder: (context, _) {
+                        if (widget.syncService.isSyncing) {
+                          return const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          );
+                        }
+                        return const Icon(
+                          Icons.sync_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        );
+                      },
                     ),
                   ),
                 ],
