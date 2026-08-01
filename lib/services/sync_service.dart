@@ -9,6 +9,11 @@ class SyncService {
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
 
+  final StreamController<void> _syncController =
+      StreamController<void>.broadcast();
+
+  Stream<void> get onSyncComplete => _syncController.stream;
+
   SyncService(this._api);
 
   void start() {
@@ -20,7 +25,10 @@ class SyncService {
     syncNow();
   }
 
-  void dispose() => _sub?.cancel();
+  void dispose() {
+    _sub?.cancel();
+    _syncController.close();
+  }
 
   Future<void> syncNow() async {
     if (_syncing) return;
@@ -28,9 +36,7 @@ class SyncService {
     try {
       // 1. Push local dirty tasks (creates/edits/deletes)
       final dirty = await TaskStorage.getUnsyncedTasks();
-      print("==== unsynced: ");
       for (final task in dirty) {
-        print("\t${task.title} - ${task.updatedAt}");
         if (task.isDeleted) {
           await _api.deleteTask(task);
         } else {
@@ -58,6 +64,7 @@ class SyncService {
       }
 
       await TaskStorage.setLastSyncTime(DateTime.now());
+      _syncController.add(null);
     } catch (e, st) {
       print("syncNow failed: $e");
       print(st);

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:todo_app/services/sync_service.dart';
 import 'package:uuid/uuid.dart';
 import '../app.dart';
 import '../models/task.dart';
@@ -12,8 +15,9 @@ extension _IntLet on int {
 
 class DayScreen extends StatefulWidget {
   final DateTime date;
+  final SyncService syncService;
 
-  const DayScreen({super.key, required this.date});
+  const DayScreen({super.key, required this.date, required this.syncService});
 
   @override
   State<DayScreen> createState() => _DayScreenState();
@@ -24,10 +28,19 @@ class _DayScreenState extends State<DayScreen> {
   bool _loading = true;
   final _uuid = const Uuid();
 
+  StreamSubscription<void>? _syncSub;
+
   @override
   void initState() {
     super.initState();
     _loadTasks();
+    _syncSub = widget.syncService.onSyncComplete.listen((_) => _loadTasks());
+  }
+
+  @override
+  void dispose() {
+    _syncSub?.cancel();
+    super.dispose();
   }
 
   @override

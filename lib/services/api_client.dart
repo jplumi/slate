@@ -12,7 +12,6 @@ class ApiClient {
       };
 
   Future<void> saveTask(Task task) async {
-    print("=========== SAVE TASK");
     final uri = Uri.parse('$baseUrl/tasks');
     final res =
         await http.put(uri, headers: _headers, body: jsonEncode(task.toJson()));
@@ -20,7 +19,6 @@ class ApiClient {
   }
 
   Future<void> deleteTask(Task task) async {
-    print("=========== DELETE TASK");
     final uri = Uri.parse('$baseUrl/tasks');
     final res = await http.delete(uri, headers: _headers, body: jsonEncode(task.toJson()));
     if (res.statusCode == 404) return; // already gone server-side, fine
@@ -28,7 +26,6 @@ class ApiClient {
   }
 
   Future<List<Task>> getAll() async {
-    print("=========== GET ALL");
     final uri = Uri.parse('$baseUrl/tasks');
     final res = await http.get(uri, headers: _headers);
     _checkOk(res);
@@ -37,7 +34,6 @@ class ApiClient {
   }
 
   Future<List<Task>> getChangesSince(DateTime? since) async {
-    print("=========== GET CHANGES");
     final uri = Uri.parse('$baseUrl/tasks/changes')
         .replace(queryParameters: {'since': since?.millisecondsSinceEpoch.toString()});
     final res = await http.get(uri, headers: _headers);
