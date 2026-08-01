@@ -1,17 +1,26 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:todo_app/models/task.dart';
-import 'api_client.dart'; // thin wrapper around your Go backend's REST endpoints
+import 'api_client.dart';
 import 'task_storage.dart';
 
-class SyncService {
+class SyncService extends ChangeNotifier {
   final ApiClient _api;
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
 
+  bool get isSyncing => _syncing;
+
+  String? _lastError;
+  String? get lastError => _lastError;
+
+  void clearError() {
+    _lastError = null;
+  }
+
   final StreamController<void> _syncController =
       StreamController<void>.broadcast();
-
   Stream<void> get onSyncComplete => _syncController.stream;
 
   SyncService(this._api);
@@ -25,14 +34,17 @@ class SyncService {
     syncNow();
   }
 
+  @override
   void dispose() {
     _sub?.cancel();
     _syncController.close();
+    super.dispose();
   }
 
   Future<void> syncNow() async {
     if (_syncing) return;
     _syncing = true;
+    notifyListeners();
     try {
       // 1. Push local dirty tasks (creates/edits/deletes)
       final dirty = await TaskStorage.getUnsyncedTasks();
@@ -68,8 +80,10 @@ class SyncService {
     } catch (e, st) {
       print("syncNow failed: $e");
       print(st);
+      _lastError = e.toString();
     } finally {
       _syncing = false;
+      notifyListeners();
     }
   }
 }
