@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo_app/services/sync_service.dart';
 import 'package:todo_app/widgets/task_tile.dart';
 import '../app.dart';
 import '../models/task.dart';
@@ -9,7 +12,9 @@ import '../services/task_storage.dart';
 enum _SortOrder { newestFirst, oldestFirst }
 
 class AllTasksScreen extends StatefulWidget {
-  const AllTasksScreen({super.key});
+  final SyncService syncService;
+
+  const AllTasksScreen({super.key, required this.syncService});
 
   @override
   State<AllTasksScreen> createState() => _AllTasksScreenState();
@@ -24,10 +29,19 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
   _SortOrder _sortOrder = _SortOrder.newestFirst;
   bool _pendingOnly = false;
 
+  StreamSubscription<void>? _syncSub;
+
   @override
   void initState() {
     super.initState();
     _loadPrefs().then((_) => _loadAll());
+    _syncSub = widget.syncService.onSyncComplete.listen((_) => _loadAll());
+  }
+
+  @override
+  void dispose() {
+    _syncSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPrefs() async {

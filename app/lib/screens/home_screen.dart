@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const AllTasksScreen(),
+            AllTasksScreen(syncService: widget.syncService),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: Tween<Offset>(
@@ -135,7 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               itemBuilder: (context, index) {
                 final date = _dateFromIndex(index);
-                return DayScreen(key: _keyForIndex(index), date: date);
+                return DayScreen(
+                    key: _keyForIndex(index),
+                    date: date,
+                    syncService: widget.syncService);
               },
             ),
           ),
