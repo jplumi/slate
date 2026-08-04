@@ -19,7 +19,8 @@ func InitDB() (*sql.DB, error) {
 			title        TEXT NOT NULL,
 			is_completed BOOLEAN NOT NULL DEFAULT 0,
 			position     INTEGER NOT NULL,
-			updated_at   TEXT NOT NULL
+			updated_at   INTEGER NOT NULL,
+			deleted   	 INTEGER NOT NULL DEFAULT 0
 		);
 		CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date);`
 	if _, err := db.Exec(schema); err != nil {
