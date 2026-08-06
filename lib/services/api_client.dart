@@ -4,11 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:todo_app/models/task.dart';
 
 class ApiClient {
-  static const String baseUrl = "http://10.0.2.2:8081";
+  static const String baseUrl = String.fromEnvironment("SYNC_API_URL");
+  static const String apiKey = String.fromEnvironment("SYNC_API_KEY");
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer $apiKey',
+        'Authorization': 'Bearer $apiKey',
       };
 
   Future<void> saveTask(Task task) async {
@@ -20,7 +21,8 @@ class ApiClient {
 
   Future<void> deleteTask(Task task) async {
     final uri = Uri.parse('$baseUrl/tasks');
-    final res = await http.delete(uri, headers: _headers, body: jsonEncode(task.toJson()));
+    final res = await http.delete(uri,
+        headers: _headers, body: jsonEncode(task.toJson()));
     if (res.statusCode == 404) return; // already gone server-side, fine
     _checkOk(res);
   }
@@ -34,8 +36,8 @@ class ApiClient {
   }
 
   Future<List<Task>> getChangesSince(DateTime? since) async {
-    final uri = Uri.parse('$baseUrl/tasks/changes')
-        .replace(queryParameters: {'since': since?.millisecondsSinceEpoch.toString()});
+    final uri = Uri.parse('$baseUrl/tasks/changes').replace(
+        queryParameters: {'since': since?.millisecondsSinceEpoch.toString()});
     final res = await http.get(uri, headers: _headers);
     _checkOk(res);
     final List<dynamic> list = jsonDecode(res.body);
