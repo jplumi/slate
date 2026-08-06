@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"jplumi.com.br/slate_service/src/database"
+	"jplumi.com.br/slate_service/src/middleware"
 )
 
 var db *sql.DB
@@ -125,7 +126,11 @@ func main() {
 	mux.HandleFunc("DELETE /tasks", deleteTask)
 	mux.HandleFunc("GET /tasks/changes", getChangesSince)
 
+	var handler http.Handler = mux
+	handler = middleware.Auth(handler)
+	handler = middleware.Logger(handler)
+
 	log.Println("Server started.")
-	log.Fatal(http.ListenAndServe(":8081", mux))
+	log.Fatal(http.ListenAndServe(":8081", handler))
 }
 
