@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"jplumi.com.br/slate_service/src/database"
@@ -112,13 +114,24 @@ func apiError(w http.ResponseWriter, err error) {
 }
 
 func main() {
+	// Log file
 	var err error
+	file, err := os.OpenFile("data/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer file.Close()
+	file.Write([]byte("\n\n"))
+	log.SetOutput(io.MultiWriter(os.Stdout, file))
+
+	// Database
 	db, err = database.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to init database: %v", err)
 	}
 	defer db.Close()
 
+	// Handlers
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /tasks", getTasks)
