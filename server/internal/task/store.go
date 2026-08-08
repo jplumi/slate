@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 var ErrTaskNotFound = errors.New("task not found")
 
 func (s *Store) GetTasks(includeDeleted bool) ([]Task, error) {
-	query := "SELECT * FROM tasks"
+	query := `SELECT id, date, title, is_completed, position, updated_at, deleted FROM tasks`
 	if !includeDeleted {
 		query += " WHERE deleted = 0"
 	}
@@ -59,7 +59,7 @@ func (s *Store) SaveTask(task Task) error {
 		incomingUpdatedAt := time.UnixMilli(task.UpdatedAt)
 
 		if syncedUpdatedAt.Equal(incomingUpdatedAt) || syncedUpdatedAt.After(incomingUpdatedAt) {
-			log.Printf("Tried to sync with older update - id: %v, synced: %v, older: %v", task.ID, syncedUpdatedAt, incomingUpdatedAt)
+			log.Printf("CONFLICT: Tried to sync with older update - id: %v, synced: %v, older: %v", task.ID, syncedUpdatedAt, incomingUpdatedAt)
 			return nil
 		}
 	}
@@ -86,7 +86,6 @@ func (s *Store) SaveTask(task Task) error {
 }
 
 func (s *Store) DeleteTask(task Task) error {
-	log.Printf("delete task: %v", task.ID)
 	result, err := s.db.Exec("UPDATE tasks SET deleted=1, updated_at=? WHERE id = ?", task.UpdatedAt, task.ID)
 	if err != nil {
 		return err
@@ -100,7 +99,11 @@ func (s *Store) DeleteTask(task Task) error {
 }
 
 func (s *Store) GetChangesSince(since int64) ([]Task, error) {
-	rows, err := s.db.Query("SELECT * FROM tasks WHERE updated_at >= ?", since)
+	query := `SELECT id, date, title, is_completed, position, updated_at, deleted
+		FROM tasks
+		WHERE updated_at >= ?`
+
+	rows, err := s.db.Query(query, since)
 	if err != nil {
 		return nil, err
 	}

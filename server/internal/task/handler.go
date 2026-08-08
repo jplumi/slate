@@ -3,8 +3,6 @@ package task
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -91,13 +89,8 @@ func (h *Handler) GetChangesSince(w http.ResponseWriter, r *http.Request) {
 
 func handleErr(w http.ResponseWriter, err error) {
 	if errors.Is(err, ErrTaskNotFound) {
-		status := http.StatusNotFound
-		msg := fmt.Sprintf("Error %v: %v\n", status, err)
-		log.Print(msg)
-		http.Error(w, msg, status)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-
-	log.Printf("Error %v: %v\n", http.StatusInternalServerError, err.Error())
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
