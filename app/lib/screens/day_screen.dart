@@ -72,6 +72,7 @@ class _DayScreenState extends State<DayScreen> {
     );
     setState(() => _tasks.add(task));
     TaskStorage.saveTask(task);
+    widget.syncService.scheduleSync();
   }
 
   void _toggleTask(String id) {
@@ -81,11 +82,13 @@ class _DayScreenState extends State<DayScreen> {
         _tasks[index].copyWith(isCompleted: !_tasks[index].isCompleted);
     setState(() => _tasks[index] = updated);
     TaskStorage.saveTask(updated);
+    widget.syncService.scheduleSync();
   }
 
   void _deleteTask(String id) {
     setState(() => _tasks.removeWhere((t) => t.id == id));
     TaskStorage.deleteTask(id);
+    widget.syncService.scheduleSync();
   }
 
   void showAddSheet() {
@@ -119,6 +122,7 @@ class _DayScreenState extends State<DayScreen> {
     final updated = _tasks[index].copyWith(title: newTitle.trim());
     setState(() => _tasks[index] = updated);
     TaskStorage.saveTask(updated);
+    widget.syncService.scheduleSync();
   }
 
   int get _completedCount => _tasks.where((t) => t.isCompleted).length;
@@ -302,5 +306,6 @@ class _DayScreenState extends State<DayScreen> {
       }
     });
     TaskStorage.saveTasks(_tasks);
+    widget.syncService.scheduleSync();
   }
 }

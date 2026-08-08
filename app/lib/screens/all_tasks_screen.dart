@@ -68,6 +68,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
     final updated =
         tasks[index].copyWith(isCompleted: !tasks[index].isCompleted);
     await TaskStorage.saveTask(updated);
+    widget.syncService.scheduleSync();
     final newList = List<Task>.from(tasks);
     newList[index] = updated;
     setState(() => _tasksByDate[dateStr] = newList);
@@ -75,6 +76,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
   Future<void> _deleteTask(String dateStr, String taskId) async {
     await TaskStorage.deleteTask(taskId);
+    widget.syncService.scheduleSync();
     final tasks = _tasksByDate[dateStr]!.where((t) => t.id != taskId).toList();
     setState(() {
       if (tasks.isEmpty) {
@@ -157,6 +159,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
         .map((t) => t.id)
         .toList();
     await TaskStorage.deleteTasks(doneIds);
+    widget.syncService.scheduleSync();
     await _loadAll();
   }
 

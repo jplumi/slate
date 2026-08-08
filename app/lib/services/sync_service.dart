@@ -9,6 +9,7 @@ class SyncService extends ChangeNotifier {
   final ApiClient _api;
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
+  Timer? _debounceTimer;
 
   bool get isSyncing => _syncing;
 
@@ -34,10 +35,16 @@ class SyncService extends ChangeNotifier {
     syncNow();
   }
 
+  void scheduleSync({Duration delay = const Duration(milliseconds: 1200)}) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(delay, syncNow);
+  }
+
   @override
   void dispose() {
     _sub?.cancel();
     _syncController.close();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
