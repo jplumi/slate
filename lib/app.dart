@@ -24,6 +24,9 @@ class _TodoAppState extends State<TodoApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       syncService.syncNow();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      syncService.syncNow();
     }
   }
 
@@ -80,7 +83,8 @@ class AppTheme {
         ),
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: ink, fontWeight: FontWeight.w700, letterSpacing: -1),
+        displayLarge: TextStyle(
+            color: ink, fontWeight: FontWeight.w700, letterSpacing: -1),
         titleLarge: TextStyle(color: ink, fontWeight: FontWeight.w600),
         bodyLarge: TextStyle(color: ink, fontSize: 16, height: 1.5),
         bodyMedium: TextStyle(color: ink, fontSize: 14, height: 1.4),
