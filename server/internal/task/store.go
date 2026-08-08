@@ -1,20 +1,31 @@
-package main
+package task
 
 import (
+	"database/sql"
+	"errors"
 	"log"
-	"net/http"
 	"time"
 )
 
-func GetTasks(includeDeleted bool) ([]Task, error) {
-	query := "SELECT * FROM tasks";
+type Store struct {
+	db *sql.DB
+}
+
+func NewStore(db *sql.DB) *Store {
+	return &Store{db}
+}
+
+var ErrTaskNotFound = errors.New("task not found")
+
+func (s *Store) GetTasks(includeDeleted bool) ([]Task, error) {
+	query := "SELECT * FROM tasks"
 	if !includeDeleted {
 		query += " WHERE deleted = 0"
 	}
 
-	rows, err := db.Query(query)
+	rows, err := s.db.Query(query)
 	if err != nil {
-		return nil, &ApiError{"Failed to get Tasks", http.StatusInternalServerError}
+		return nil, err
 	}
 
 	tasks := []Task{}
@@ -30,7 +41,7 @@ func GetTasks(includeDeleted bool) ([]Task, error) {
 			&task.IsDeleted,
 		)
 		if err != nil {
-			return nil, &ApiError{"Failed to get Tasks", http.StatusInternalServerError}
+			return nil, err
 		}
 		tasks = append(tasks, task)
 	}
@@ -38,10 +49,10 @@ func GetTasks(includeDeleted bool) ([]Task, error) {
 	return tasks, nil
 }
 
-func SaveTask(task Task) error {
+func (s *Store) SaveTask(task Task) error {
 	// Get task last update
 	var updatedAt int64
-	db.QueryRow("SELECT updated_at FROM tasks WHERE ID = ?", task.ID).Scan(&updatedAt)
+	s.db.QueryRow("SELECT updated_at FROM tasks WHERE ID = ?", task.ID).Scan(&updatedAt)
 
 	if updatedAt != 0 {
 		syncedUpdatedAt := time.UnixMilli(updatedAt)
@@ -53,7 +64,7 @@ func SaveTask(task Task) error {
 		}
 	}
 
-	_, err := db.Exec(`
+	_, err := s.db.Exec(`
 		INSERT INTO tasks (ID, date, title, is_completed, position, updated_at)
 		VALUES (?,?,?,?,?,?)
 		ON CONFLICT(id) DO UPDATE 
@@ -74,22 +85,22 @@ func SaveTask(task Task) error {
 	return err
 }
 
-func DeleteTask(task Task) error {
+func (s *Store) DeleteTask(task Task) error {
 	log.Printf("delete task: %v", task.ID)
-	result, err := db.Exec("UPDATE tasks SET deleted=1, updated_at=? WHERE id = ?", task.UpdatedAt, task.ID)
+	result, err := s.db.Exec("UPDATE tasks SET deleted=1, updated_at=? WHERE id = ?", task.UpdatedAt, task.ID)
 	if err != nil {
 		return err
 	}
 
 	if rows, _ := result.RowsAffected(); rows < 1 {
-		return &ApiError{"id not found", http.StatusNotFound}
+		return ErrTaskNotFound
 	}
 
 	return nil
 }
 
-func GetChangesSince(since int64) ([]Task, error) {
-	rows, err := db.Query("SELECT * FROM tasks WHERE updated_at >= ?", since)
+func (s *Store) GetChangesSince(since int64) ([]Task, error) {
+	rows, err := s.db.Query("SELECT * FROM tasks WHERE updated_at >= ?", since)
 	if err != nil {
 		return nil, err
 	}
