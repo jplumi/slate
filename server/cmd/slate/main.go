@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	_ "time/tzdata"
 
 	"jplumi.com.br/slate_service/internal/api"
 	"jplumi.com.br/slate_service/internal/database"
