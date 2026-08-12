@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:todo_app/screens/sync_error_screen.dart';
 import 'package:todo_app/services/sync_service.dart';
 
 import '../app.dart';
@@ -32,29 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _currentDate = _dateFromIndex(_todayIndex);
     _pageController = PageController(initialPage: _todayIndex);
-    widget.syncService.addListener(_handleSyncUpdate);
   }
 
   @override
   void dispose() {
-    widget.syncService.removeListener(_handleSyncUpdate);
     _pageController.dispose();
     super.dispose();
-  }
-
-  void _handleSyncUpdate() {
-    final error = widget.syncService.lastError;
-    if (error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Sync failed: $error'),
-          backgroundColor: AppTheme.accent,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-      widget.syncService.clearError();
-    }
   }
 
   GlobalKey<State<StatefulWidget>> _keyForIndex(int index) {
@@ -131,6 +115,26 @@ class _HomeScreenState extends State<HomeScreen> {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+
+  void _openSyncErrors() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            SyncErrorsScreen(syncService: widget.syncService),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -215,7 +219,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                   const Spacer(),
                   GestureDetector(
-                    onTap: widget.syncService.syncNow,
+                    onTap: () {
+                      if (widget.syncService.hasError) {
+                        _openSyncErrors();
+                      } else {
+                        widget.syncService.syncNow();
+                      }
+                    },
                     child: AnimatedBuilder(
                       animation: widget.syncService,
                       builder: (context, _) {
@@ -230,10 +240,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         }
-                        return const Icon(
-                          Icons.sync_rounded,
-                          color: Colors.white,
-                          size: 20,
+                        return Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: widget.syncService.hasError
+                                ? AppTheme.accent
+                                : AppTheme.checkGreen,
+                          ),
                         );
                       },
                     ),
