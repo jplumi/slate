@@ -141,7 +141,11 @@ class _DayScreenState extends State<DayScreen> {
         body: _loading
             ? const Center(
                 child: CircularProgressIndicator(color: AppTheme.ink))
-            : _buildBody(),
+            : RefreshIndicator(
+                color: AppTheme.ink,
+                onRefresh: widget.syncService.syncNow,
+                child: _buildBody(),
+              ),
       ),
     );
   }
@@ -155,7 +159,8 @@ class _DayScreenState extends State<DayScreen> {
       behavior: HitTestBehavior.translucent,
       onTap: showAddSheet,
       child: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
         slivers: [
           if (_pendingTasks.isNotEmpty) ...[
             SliverToBoxAdapter(
@@ -245,45 +250,50 @@ class _DayScreenState extends State<DayScreen> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: showAddSheet,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: AppTheme.ink.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add_task_rounded,
-                size: 32,
-                color: AppTheme.muted,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No tasks yet',
-              style: TextStyle(
-                color: AppTheme.ink,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'sans-serif',
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Tap anywhere to add your first task',
-              style: TextStyle(
-                color: AppTheme.muted,
-                fontSize: 14,
-                fontFamily: 'sans-serif',
-              ),
-            ),
-          ],
-        ),
-      ),
+      child:
+          ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
+        Center(
+          child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: AppTheme.ink.withValues(alpha: 0.06),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_task_rounded,
+                      size: 32,
+                      color: AppTheme.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No tasks yet',
+                    style: TextStyle(
+                      color: AppTheme.ink,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'sans-serif',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Tap anywhere to add your first task',
+                    style: TextStyle(
+                      color: AppTheme.muted,
+                      fontSize: 14,
+                      fontFamily: 'sans-serif',
+                    ),
+                  ),
+                ],
+              )),
+        )
+      ]),
     );
   }
 
