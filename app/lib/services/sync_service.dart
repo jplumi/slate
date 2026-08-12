@@ -5,6 +5,12 @@ import 'package:todo_app/models/task.dart';
 import 'api_client.dart';
 import 'task_storage.dart';
 
+class SyncErrorEntry {
+  final DateTime time;
+  final String message;
+  SyncErrorEntry(this.time, this.message);
+}
+
 class SyncService extends ChangeNotifier {
   final ApiClient _api;
   StreamSubscription<List<ConnectivityResult>>? _sub;
@@ -13,12 +19,11 @@ class SyncService extends ChangeNotifier {
 
   bool get isSyncing => _syncing;
 
-  String? _lastError;
-  String? get lastError => _lastError;
+  bool _hasError = false;
+  bool get hasError => _hasError;
 
-  void clearError() {
-    _lastError = null;
-  }
+  final List<SyncErrorEntry> _errorLog = [];
+  List<SyncErrorEntry> get errorLog => List.unmodifiable(_errorLog);
 
   final StreamController<void> _syncController =
       StreamController<void>.broadcast();
@@ -84,10 +89,10 @@ class SyncService extends ChangeNotifier {
 
       await TaskStorage.setLastSyncTime(DateTime.now());
       _syncController.add(null);
-    } catch (e, st) {
-      print("syncNow failed: $e");
-      print(st);
-      _lastError = e.toString();
+      _hasError = false;
+    } catch (e) {
+      _hasError = true;
+      _errorLog.add(SyncErrorEntry(DateTime.now(), e.toString()));
     } finally {
       _syncing = false;
       notifyListeners();
