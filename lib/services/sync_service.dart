@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:todo_app/models/task.dart';
+import 'package:slate/models/task.dart';
 import 'api_client.dart';
 import 'task_storage.dart';
 

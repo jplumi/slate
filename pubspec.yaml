@@ -1,4 +1,4 @@
-name: todo_app
+name: slate
 description: Slate - A daily task scheduler app
 publish_to: 'none'
 version: 1.0.0+1
@@ -15,6 +15,7 @@ dependencies:
   table_calendar: ^3.1.0
   uuid: ^4.3.3
   sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
   path: ^1.8.3
   connectivity_plus: ^6.0.0
 

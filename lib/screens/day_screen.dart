@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:todo_app/services/sync_service.dart';
+import 'package:slate/services/sync_service.dart';
 import 'package:uuid/uuid.dart';
 import '../app.dart';
 import '../models/task.dart';

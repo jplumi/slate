@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:todo_app/screens/sync_error_screen.dart';
-import 'package:todo_app/services/sync_service.dart';
+import 'package:slate/screens/sync_error_screen.dart';
+import 'package:slate/services/sync_service.dart';
 
 import '../app.dart';
 import 'calendar_screen.dart';
