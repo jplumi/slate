@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:todo_app/models/task.dart';
+import 'package:slate/models/task.dart';
 
 class ApiClient {
   static const String baseUrl = String.fromEnvironment("SYNC_API_URL");

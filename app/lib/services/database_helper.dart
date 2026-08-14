@@ -1,11 +1,14 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
   DatabaseHelper._internal();
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static Database? _database;
+  static bool _ffiInitialized = false;
 
   Future<Database> get database async {
     _database ??= await _initDatabase();
@@ -13,6 +16,13 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
+    if (!kIsWeb &&
+        (Platform.isMacOS || Platform.isWindows || Platform.isLinux) &&
+        !_ffiInitialized) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      _ffiInitialized = true;
+    }
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'slate.db');
     return openDatabase(

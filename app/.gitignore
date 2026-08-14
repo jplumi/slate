@@ -3,7 +3,7 @@
 .flutter-plugins-dependencies
 .packages
 pubspec.lock
-run.sh
+run-*.sh
 build.sh
 
 # Build outputs
