@@ -52,7 +52,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       padding: EdgeInsets.only(bottom: bottom),
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.inkLight,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
@@ -77,7 +77,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 Text(
                   _isEditing ? 'EDIT TASK' : 'NEW TASK',
                   style: const TextStyle(
-                    color: AppTheme.muted,
+                    color: AppTheme.neutralLight,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
@@ -92,7 +92,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         controller: _controller,
                         focusNode: _focusNode,
                         style: const TextStyle(
-                          color: AppTheme.ink,
+                          color: AppTheme.neutralLight,
                           fontSize: 18,
                           fontFamily: 'sans-serif',
                           fontWeight: FontWeight.w500,

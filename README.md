@@ -27,8 +27,3 @@ Works fully offline without the sync env vars set.
 ## Sync
 
 `SyncService` pushes local changes and pulls remote ones whenever connectivity returns, the app resumes/pauses, or shortly after an edit. Conflicts resolve by last-write-wins (`updatedAt`). Sync status shows in the header; failures surface as a snackbar.
-
-## Design Notes
-
-- Palette: navy `#1A1A2E`, cream `#F5F0E8`, accent red `#E84855`
-- `PageController` with 20,000 pages (index 10,000 = today)

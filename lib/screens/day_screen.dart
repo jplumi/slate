@@ -137,12 +137,12 @@ class _DayScreenState extends State<DayScreen> {
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
-        backgroundColor: AppTheme.cream,
+        backgroundColor: AppTheme.ink,
         body: _loading
             ? const Center(
-                child: CircularProgressIndicator(color: AppTheme.ink))
+                child: CircularProgressIndicator(color: Colors.white))
             : RefreshIndicator(
-                color: AppTheme.ink,
+                color: Colors.white,
                 onRefresh: widget.syncService.syncNow,
                 child: _buildBody(),
               ),

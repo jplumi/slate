@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.cream,
+      backgroundColor: AppTheme.ink,
       body: Column(
         children: [
           _buildHeader(),
@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     dayName,
                     style: const TextStyle(
-                      color: AppTheme.accent,
+                      color: AppTheme.accentRed,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2.5,
@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.accent,
+                        color: AppTheme.accentRed,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
@@ -246,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: widget.syncService.hasError
-                                ? AppTheme.accent
+                                ? AppTheme.accentRed
                                 : AppTheme.checkGreen,
                           ),
                         );
@@ -291,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBottomBar() {
     return Container(
-      color: AppTheme.ink,
+      color: AppTheme.inkLight,
       child: SafeArea(
         top: false,
         child: Padding(
@@ -309,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 48,
                   height: 48,
                   decoration: const BoxDecoration(
-                    color: AppTheme.accent,
+                    color: AppTheme.accentRed,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.add, color: Colors.white, size: 26),

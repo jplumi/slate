@@ -123,14 +123,14 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.cream,
+        backgroundColor: AppTheme.ink,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete all done tasks?',
             style: TextStyle(
                 fontFamily: 'sans-serif',
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.ink)),
+                color: Colors.white)),
         content: const Text(
             'This will permanently remove completed tasks across all days.',
             style: TextStyle(
@@ -145,7 +145,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Delete',
                   style: TextStyle(
-                      color: AppTheme.accent,
+                      color: AppTheme.accentRed,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'sans-serif'))),
         ],
@@ -180,7 +180,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.cream,
+      backgroundColor: AppTheme.ink,
       appBar: AppBar(
         backgroundColor: AppTheme.ink,
         leading: IconButton(
@@ -195,7 +195,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                 fontFamily: 'sans-serif')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.ink))
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : _tasksByDate.isEmpty
               ? _buildEmpty()
               : Column(
@@ -211,7 +211,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
   Widget _buildActionBar() {
     final count = _completedCount;
     return Container(
-      color: Colors.white,
+      color: AppTheme.ink,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
@@ -230,19 +230,20 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentSoft,
+                  color: AppTheme.ink,
                   borderRadius: BorderRadius.circular(20),
+                  border: BoxBorder.all(color: AppTheme.accentRed),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.delete_outline,
-                        size: 14, color: AppTheme.accent),
+                        size: 14, color: AppTheme.accentRed),
                     SizedBox(width: 4),
                     Text('Delete done',
                         style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.accent,
+                            color: AppTheme.accentRed,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'sans-serif')),
                   ],
@@ -256,7 +257,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
   Widget _buildFilterBar() {
     return Container(
-      color: AppTheme.cream,
+      color: AppTheme.ink,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -309,10 +310,10 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _pendingOnly ? AppTheme.accent : Colors.white,
+                color: _pendingOnly ? AppTheme.neutralLight : AppTheme.ink,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: _pendingOnly ? AppTheme.accent : AppTheme.divider,
+                  color: AppTheme.neutralLight
                 ),
               ),
               child: Row(
@@ -323,14 +324,15 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                         ? Icons.check_box_outlined
                         : Icons.check_box_outline_blank,
                     size: 13,
-                    color: _pendingOnly ? Colors.white : AppTheme.muted,
+                    color: _pendingOnly ? AppTheme.ink : AppTheme.neutralLight,
                   ),
                   const SizedBox(width: 5),
                   Text(
                     'Pending only',
                     style: TextStyle(
                         fontSize: 12,
-                        color: _pendingOnly ? Colors.white : AppTheme.muted,
+                        color:
+                            _pendingOnly ? AppTheme.ink : AppTheme.neutralLight,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'sans-serif'),
                   ),
@@ -385,7 +387,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               Text(
                 _formatDateHeader(dateStr).toUpperCase(),
                 style: TextStyle(
-                  color: isToday ? AppTheme.ink : AppTheme.muted,
+                  color: isToday ? Colors.white : AppTheme.muted,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.6,
@@ -398,7 +400,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.accent,
+                    color: AppTheme.accentRed,
                     borderRadius: BorderRadius.circular(3),
                   ),
                   child: const Text('TODAY',
