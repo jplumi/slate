@@ -58,8 +58,8 @@ class _TaskTileState extends State<TaskTile>
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
-        color: AppTheme.accent,
-        child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
+        color: AppTheme.accentRed,
+        child: const Icon(Icons.delete_outline, color: Colors.black, size: 24),
       ),
       onDismissed: (_) {
         HapticFeedback.mediumImpact();
@@ -71,14 +71,14 @@ class _TaskTileState extends State<TaskTile>
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           decoration: BoxDecoration(
             color: widget.task.isCompleted
-                ? Colors.white.withValues(alpha: 0.5)
-                : Colors.white,
+                ? AppTheme.inkLight.withValues(alpha: 0.5)
+                : AppTheme.inkLight,
             borderRadius: BorderRadius.circular(14),
             boxShadow: widget.task.isCompleted
                 ? []
                 : [
                     BoxShadow(
-                      color: AppTheme.ink.withValues(alpha: 0.06),
+                      color: AppTheme.inkLight.withValues(alpha: 0.06),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -124,7 +124,7 @@ class _TaskTileState extends State<TaskTile>
                       style: TextStyle(
                         color: widget.task.isCompleted
                             ? AppTheme.muted
-                            : AppTheme.ink,
+                            : AppTheme.neutralLight,
                         fontSize: 15,
                         fontFamily: 'sans-serif',
                         height: 1.4,

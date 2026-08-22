@@ -49,24 +49,23 @@ class _TodoAppState extends State<TodoApp> with WidgetsBindingObserver {
 }
 
 class AppTheme {
-  static const Color cream = Color(0xFFF5F0E8);
-  static const Color ink = Color(0xFF1A1A2E);
-  static const Color inkLight = Color(0xFF2D2D44);
-  static const Color accent = Color(0xFFE84855);
-  static const Color accentSoft = Color(0xFFFDE8EA);
-  static const Color muted = Color(0xFF8A8A9A);
-  static const Color divider = Color(0xFFE0D9CF);
+  static const Color ink = Color(0xFF000000);
+  static const Color inkLight = Color(0xFF262626);
+  static const Color accentRed = Color(0xFFE84855);
+  static const Color neutralLight = Color(0xFFF0F0F0);
+  static const Color muted = Color(0xFF6E6E6E);
+  static const Color divider = Color(0xFFE0E0E0);
   static const Color checkGreen = Color(0xFF4CAF7D);
 
   static ThemeData light() {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: cream,
+      scaffoldBackgroundColor: ink,
       colorScheme: const ColorScheme.light(
         primary: ink,
-        secondary: accent,
-        surface: cream,
-        onPrimary: cream,
+        secondary: accentRed,
+        surface: ink,
+        onPrimary: ink,
         onSecondary: Colors.white,
         onSurface: ink,
       ),

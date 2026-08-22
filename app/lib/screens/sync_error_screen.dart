@@ -13,7 +13,7 @@ class SyncErrorsScreen extends StatelessWidget {
     final errors = syncService.errorLog.reversed.toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.cream,
+      backgroundColor: AppTheme.ink,
       appBar: AppBar(
         backgroundColor: AppTheme.ink,
         leading: IconButton(

@@ -39,7 +39,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: AppTheme.cream,
+        backgroundColor: AppTheme.ink,
         appBar: AppBar(
           backgroundColor: AppTheme.ink,
           leading: IconButton(
@@ -63,7 +63,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: const Text(
                 'Today',
                 style: TextStyle(
-                  color: AppTheme.accent,
+                  color: AppTheme.accentRed,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'sans-serif',
                 ),
@@ -94,33 +94,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
         defaultTextStyle: const TextStyle(
-          color: AppTheme.ink,
+          color: Colors.white,
           fontFamily: 'sans-serif',
         ),
         weekendTextStyle: const TextStyle(
-          color: AppTheme.ink,
+          color: Colors.white,
           fontFamily: 'sans-serif',
         ),
         selectedDecoration: const BoxDecoration(
-          color: AppTheme.accent,
+          color: Colors.white,
           shape: BoxShape.circle,
         ),
         selectedTextStyle: const TextStyle(
-          color: Colors.white,
+          color: AppTheme.ink,
           fontWeight: FontWeight.w700,
           fontFamily: 'sans-serif',
         ),
         todayDecoration: BoxDecoration(
-          color: AppTheme.ink.withValues(alpha: 0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         todayTextStyle: const TextStyle(
-          color: AppTheme.ink,
+          color: Colors.white,
           fontWeight: FontWeight.w700,
           fontFamily: 'sans-serif',
         ),
         markerDecoration: const BoxDecoration(
-          color: AppTheme.accent,
+          color: AppTheme.accentRed,
           shape: BoxShape.circle,
         ),
         markersMaxCount: 1,
@@ -131,13 +131,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
         formatButtonVisible: false,
         titleCentered: true,
         titleTextStyle: TextStyle(
-          color: AppTheme.ink,
+          color: Colors.white,
           fontSize: 16,
           fontWeight: FontWeight.w700,
           fontFamily: 'sans-serif',
         ),
-        leftChevronIcon: Icon(Icons.chevron_left, color: AppTheme.ink),
-        rightChevronIcon: Icon(Icons.chevron_right, color: AppTheme.ink),
+        leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+        rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
       ),
       daysOfWeekStyle: const DaysOfWeekStyle(
         weekdayStyle: TextStyle(
@@ -163,8 +163,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 height: 5,
                 decoration: BoxDecoration(
                   color: isSameDay(day, DateTime.now())
-                      ? AppTheme.ink
-                      : AppTheme.accent.withValues(alpha: 0.7),
+                      ? Colors.white
+                      : AppTheme.accentRed.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                 ),
               ),
