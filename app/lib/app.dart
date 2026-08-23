@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:slate/screens/desktop_home_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/api_client.dart';
 import 'services/sync_service.dart';
@@ -43,7 +47,10 @@ class _TodoAppState extends State<TodoApp> with WidgetsBindingObserver {
       title: 'Slate',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: HomeScreen(syncService: syncService),
+      home: (!kIsWeb &&
+              (Platform.isMacOS || Platform.isLinux || Platform.isWindows))
+          ? DesktopHomeScreen(syncService: syncService)
+          : HomeScreen(syncService: syncService),
     );
   }
 }
@@ -70,6 +77,9 @@ class AppTheme {
         onSurface: ink,
       ),
       fontFamily: 'serif',
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppTheme.neutralLight,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,

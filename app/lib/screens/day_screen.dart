@@ -16,14 +16,19 @@ extension _IntLet on int {
 class DayScreen extends StatefulWidget {
   final DateTime date;
   final SyncService syncService;
+  final bool tapAnywhereToAdd;
 
-  const DayScreen({super.key, required this.date, required this.syncService});
+  const DayScreen(
+      {super.key,
+      required this.date,
+      required this.syncService,
+      required this.tapAnywhereToAdd});
 
   @override
-  State<DayScreen> createState() => _DayScreenState();
+  State<DayScreen> createState() => DayScreenState();
 }
 
-class _DayScreenState extends State<DayScreen> {
+class DayScreenState extends State<DayScreen> {
   List<Task> _tasks = [];
   bool _loading = true;
   final _uuid = const Uuid();
@@ -62,7 +67,7 @@ class _DayScreenState extends State<DayScreen> {
     }
   }
 
-  void _addTask(String title) {
+  void addTask(String title) {
     if (title.trim().isEmpty) return;
     final task = Task(
       id: _uuid.v4(),
@@ -96,7 +101,7 @@ class _DayScreenState extends State<DayScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => AddTaskSheet(onAdd: _addTask),
+      builder: (_) => AddTaskSheet(onAdd: addTask),
     );
   }
 
@@ -155,65 +160,71 @@ class _DayScreenState extends State<DayScreen> {
       return _buildEmptyState();
     }
 
+    final list = CustomScrollView(
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+      slivers: [
+        if (_pendingTasks.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              '${_pendingTasks.length} task${_pendingTasks.length == 1 ? '' : 's'} to do',
+              false,
+            ),
+          ),
+          SliverReorderableList(
+            itemCount: _pendingTasks.length,
+            onReorderItem: _reorderTasks,
+            itemBuilder: (context, index) {
+              final task = _pendingTasks[index];
+              return ReorderableDelayedDragStartListener(
+                key: ValueKey(task.id),
+                index: index,
+                child: TaskTile(
+                  key: ValueKey('tile_${task.id}'),
+                  task: task,
+                  onToggle: () => _toggleTask(task.id),
+                  onDelete: () => _deleteTask(task.id),
+                  onTap: () => _showEditSheet(task.id, task.title),
+                ),
+              );
+            },
+          ),
+        ],
+        if (_completedTasks.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              '$_completedCount done',
+              true,
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final task = _completedTasks[index];
+                return TaskTile(
+                  key: ValueKey(task.id),
+                  task: task,
+                  onToggle: () => _toggleTask(task.id),
+                  onDelete: () => _deleteTask(task.id),
+                  onTap: () => _showEditSheet(task.id, task.title),
+                );
+              },
+              childCount: _completedTasks.length,
+            ),
+          ),
+        ],
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+      ],
+    );
+
+    if (!widget.tapAnywhereToAdd) {
+      return list;
+    }
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: showAddSheet,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        slivers: [
-          if (_pendingTasks.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                '${_pendingTasks.length} task${_pendingTasks.length == 1 ? '' : 's'} to do',
-                false,
-              ),
-            ),
-            SliverReorderableList(
-              itemCount: _pendingTasks.length,
-              onReorderItem: _reorderTasks,
-              itemBuilder: (context, index) {
-                final task = _pendingTasks[index];
-                return ReorderableDelayedDragStartListener(
-                  key: ValueKey(task.id),
-                  index: index,
-                  child: TaskTile(
-                    key: ValueKey('tile_${task.id}'),
-                    task: task,
-                    onToggle: () => _toggleTask(task.id),
-                    onDelete: () => _deleteTask(task.id),
-                    onTap: () => _showEditSheet(task.id, task.title),
-                  ),
-                );
-              },
-            ),
-          ],
-          if (_completedTasks.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                '$_completedCount done',
-                true,
-              ),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final task = _completedTasks[index];
-                  return TaskTile(
-                    key: ValueKey(task.id),
-                    task: task,
-                    onToggle: () => _toggleTask(task.id),
-                    onDelete: () => _deleteTask(task.id),
-                    onTap: () => _showEditSheet(task.id, task.title),
-                  );
-                },
-                childCount: _completedTasks.length,
-              ),
-            ),
-          ],
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
-      ),
+      child: list,
     );
   }
 
@@ -247,54 +258,59 @@ class _DayScreenState extends State<DayScreen> {
   }
 
   Widget _buildEmptyState() {
+    final content =
+        ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
+      Center(
+        child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppTheme.ink.withValues(alpha: 0.06),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add_task_rounded,
+                    size: 32,
+                    color: AppTheme.muted,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No tasks yet',
+                  style: TextStyle(
+                    color: AppTheme.ink,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'sans-serif',
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Tap anywhere to add your first task',
+                  style: TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: 14,
+                    fontFamily: 'sans-serif',
+                  ),
+                ),
+              ],
+            )),
+      )
+    ]);
+
+    if (!widget.tapAnywhereToAdd) {
+      return content;
+    }
+
     return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: showAddSheet,
-      child:
-          ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
-        Center(
-          child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppTheme.ink.withValues(alpha: 0.06),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.add_task_rounded,
-                      size: 32,
-                      color: AppTheme.muted,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No tasks yet',
-                    style: TextStyle(
-                      color: AppTheme.ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'sans-serif',
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Tap anywhere to add your first task',
-                    style: TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: 14,
-                      fontFamily: 'sans-serif',
-                    ),
-                  ),
-                ],
-              )),
-        )
-      ]),
-    );
+        behavior: HitTestBehavior.translucent,
+        onTap: showAddSheet,
+        child: content);
   }
 
   void _reorderTasks(int oldIndex, int newIndex) {

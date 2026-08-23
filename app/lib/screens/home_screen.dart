@@ -157,9 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final date = _dateFromIndex(index);
                 return DayScreen(
-                    key: _keyForIndex(index),
-                    date: date,
-                    syncService: widget.syncService);
+                  key: _keyForIndex(index),
+                  date: date,
+                  syncService: widget.syncService,
+                  tapAnywhereToAdd: true,
+                );
               },
             ),
           ),
