@@ -1,0 +1,11 @@
+services:
+  slate-server:
+    container_name: slate-server
+    image: slate-server
+    restart: unless-stopped
+    environment:
+      - SLATE_API_KEY=token
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./data:/app/data
