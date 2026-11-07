@@ -11,12 +11,12 @@ A clean, minimal daily task scheduler. Tasks are organized by day, with swipe na
 
 - Day view with swipe navigation between dates
 - Calendar view
-- Offline-first local storage (SQLite), with sync to a personal backend ([slate-server](https://github.com/jplumi/slate-server))
+- Offline-first local storage (SQLite), with sync to the backend in this repo ([`server/`](../server))
 
 ## Setup & Run
 
 ```bash
-cd slate
+cd app
 flutter pub get
 flutter run --dart-define=SYNC_API_URL=https://sync-service.example.com --dart-define=SYNC_API_KEY=api-key
 flutter build apk --release --dart-define=SYNC_API_URL=https://sync-service.example.com --dart-define=SYNC_API_KEY=api-key
