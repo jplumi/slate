@@ -30,8 +30,11 @@ class DayScreen extends StatefulWidget {
 
 class DayScreenState extends State<DayScreen> {
   List<Task> _tasks = [];
+  final Set<String> _selectedIds = {};
   bool _loading = true;
   final _uuid = const Uuid();
+
+  bool get _selectionMode => _selectedIds.isNotEmpty;
 
   StreamSubscription<void>? _syncSub;
 
@@ -52,12 +55,16 @@ class DayScreenState extends State<DayScreen> {
   void didUpdateWidget(covariant DayScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.date != widget.date) {
+      _selectedIds.clear();
       _loadTasks();
     }
   }
 
   Future<void> _loadTasks() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _selectedIds.clear();
+    });
     final tasks = await TaskStorage.loadTasks(widget.date);
     if (mounted) {
       setState(() {
@@ -88,6 +95,74 @@ class DayScreenState extends State<DayScreen> {
     setState(() => _tasks[index] = updated);
     TaskStorage.saveTask(updated);
     widget.syncService.scheduleSync();
+  }
+
+  void _selectTask(String id) {
+    setState(() => _selectedIds.add(id));
+  }
+
+  void _toggleSelected(String id) {
+    setState(() {
+      if (!_selectedIds.remove(id)) _selectedIds.add(id);
+    });
+  }
+
+  void _exitSelection() {
+    setState(() => _selectedIds.clear());
+  }
+
+  void _onTaskTap(Task task) {
+    if (_selectionMode) {
+      _toggleSelected(task.id);
+    } else {
+      _showEditSheet(task.id, task.title);
+    }
+  }
+
+  Future<void> _confirmDeleteSelected() async {
+    final ids = _selectedIds.toList();
+    if (ids.isEmpty) return;
+    final label = ids.length == 1 ? 'task' : 'tasks';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.ink,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete ${ids.length} $label?',
+            style: const TextStyle(
+                fontFamily: 'sans-serif',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Colors.white)),
+        content: const Text(
+            'This will permanently remove the selected tasks.',
+            style: TextStyle(
+                fontFamily: 'sans-serif', color: AppTheme.muted, fontSize: 14)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel',
+                  style: TextStyle(
+                      color: AppTheme.muted, fontFamily: 'sans-serif'))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete',
+                  style: TextStyle(
+                      color: AppTheme.accentRed,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'sans-serif'))),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    await TaskStorage.deleteTasks(ids);
+    widget.syncService.scheduleSync();
+    if (!mounted) return;
+    setState(() {
+      _tasks.removeWhere((t) => ids.contains(t.id));
+      _selectedIds.clear();
+    });
   }
 
   void _deleteTask(String id) {
@@ -160,71 +235,119 @@ class DayScreenState extends State<DayScreen> {
       return _buildEmptyState();
     }
 
+    final List<Widget> slivers = [
+      if (_pendingTasks.isNotEmpty) ...[
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
+            '${_pendingTasks.length} task${_pendingTasks.length == 1 ? '' : 's'} to do',
+            false,
+          ),
+        ),
+        SliverReorderableList(
+          itemCount: _pendingTasks.length,
+          onReorderItem: _reorderTasks,
+          itemBuilder: (context, index) {
+            final task = _pendingTasks[index];
+            return TaskTile(
+              key: ValueKey(task.id),
+              task: task,
+              onToggle: () => _toggleTask(task.id),
+              onTap: () => _onTaskTap(task),
+              onLongPress: () => _selectTask(task.id),
+              selectionMode: _selectionMode,
+              selected: _selectedIds.contains(task.id),
+              reorderIndex: _selectionMode ? null : index,
+            );
+          },
+        ),
+      ],
+      if (_completedTasks.isNotEmpty) ...[
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
+            '$_completedCount done',
+            true,
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final task = _completedTasks[index];
+              return TaskTile(
+                key: ValueKey(task.id),
+                task: task,
+                onToggle: () => _toggleTask(task.id),
+                onTap: () => _onTaskTap(task),
+                onLongPress: () => _selectTask(task.id),
+                selectionMode: _selectionMode,
+                selected: _selectedIds.contains(task.id),
+              );
+            },
+            childCount: _completedTasks.length,
+          ),
+        ),
+      ],
+      const SliverToBoxAdapter(child: SizedBox(height: 100)),
+    ];
+
     final list = CustomScrollView(
       physics:
           const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
-      slivers: [
-        if (_pendingTasks.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              '${_pendingTasks.length} task${_pendingTasks.length == 1 ? '' : 's'} to do',
-              false,
-            ),
-          ),
-          SliverReorderableList(
-            itemCount: _pendingTasks.length,
-            onReorderItem: _reorderTasks,
-            itemBuilder: (context, index) {
-              final task = _pendingTasks[index];
-              return ReorderableDelayedDragStartListener(
-                key: ValueKey(task.id),
-                index: index,
-                child: TaskTile(
-                  key: ValueKey('tile_${task.id}'),
-                  task: task,
-                  onToggle: () => _toggleTask(task.id),
-                  onDelete: () => _deleteTask(task.id),
-                  onTap: () => _showEditSheet(task.id, task.title),
-                ),
-              );
-            },
-          ),
-        ],
-        if (_completedTasks.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              '$_completedCount done',
-              true,
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final task = _completedTasks[index];
-                return TaskTile(
-                  key: ValueKey(task.id),
-                  task: task,
-                  onToggle: () => _toggleTask(task.id),
-                  onDelete: () => _deleteTask(task.id),
-                  onTap: () => _showEditSheet(task.id, task.title),
-                );
-              },
-              childCount: _completedTasks.length,
-            ),
-          ),
-        ],
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
+      slivers: slivers,
     );
 
-    if (!widget.tapAnywhereToAdd) {
-      return list;
+    Widget content = list;
+    if (widget.tapAnywhereToAdd && !_selectionMode) {
+      content = GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: showAddSheet,
+        child: list,
+      );
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: showAddSheet,
-      child: list,
+    if (!_selectionMode) return content;
+
+    return Column(
+      children: [
+        _buildSelectionToolbar(),
+        Expanded(child: content),
+      ],
+    );
+  }
+
+  Widget _buildSelectionToolbar() {
+    final count = _selectedIds.length;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+      color: AppTheme.inkLight,
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: _exitSelection,
+            icon: const Icon(Icons.close, color: AppTheme.neutralLight),
+            tooltip: 'Cancel selection',
+          ),
+          Text(
+            '$count selected',
+            style: const TextStyle(
+              color: AppTheme.neutralLight,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'sans-serif',
+            ),
+          ),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: _confirmDeleteSelected,
+            icon: const Icon(Icons.delete_outline,
+                size: 18, color: AppTheme.accentRed),
+            label: const Text('Delete',
+                style: TextStyle(
+                    color: AppTheme.accentRed,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'sans-serif')),
+          ),
+        ],
+      ),
     );
   }
 
