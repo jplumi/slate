@@ -27,5 +27,7 @@ func InitDB() (*sql.DB, error) {
 		return nil, err
 	}
 
+	db.SetMaxOpenConns(1)
+
 	return db, nil
 }

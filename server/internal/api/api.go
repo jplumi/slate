@@ -9,7 +9,7 @@ import (
 	"jplumi.com.br/slate_service/internal/task"
 )
 
-func StartHttpServer(db *sql.DB) {
+func NewHandler(db *sql.DB) http.Handler {
 	taskStore := task.NewStore(db)
 	taskHandler := task.NewHandler(taskStore)
 
@@ -23,6 +23,12 @@ func StartHttpServer(db *sql.DB) {
 	var handler http.Handler = mux
 	handler = middleware.Auth(handler)
 	handler = middleware.Logger(handler)
+
+	return handler
+}
+
+func StartHttpServer(db *sql.DB) {
+	handler := NewHandler(db)
 
 	log.Println("Server started.")
 	log.Fatal(http.ListenAndServe(":8081", handler))

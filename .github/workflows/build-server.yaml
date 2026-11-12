@@ -1,0 +1,17 @@
+name: Test and build backend server 
+
+on:
+  push:
+    branches: ['main']
+    paths: ['server/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: server/go.mod }
+      - run: go vet ./... && go test ./...
+        working-directory: server
